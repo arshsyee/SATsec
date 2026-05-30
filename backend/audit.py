@@ -3,8 +3,157 @@ from bs4 import BeautifulSoup
 import time
 import ssl
 import socket
+import re
+import math
+from collections import Counter
 from datetime import datetime
 from urllib.parse import urlparse
+
+
+# --------------------------------------------
+# COLOR / STYLE HELPERS (WCAG contrast support)
+# --------------------------------------------
+def _parse_inline_style(style: str) -> dict:
+    """Split an inline style attribute into a {property: value} dict (lowercased keys)."""
+    decls = {}
+    for part in (style or "").split(";"):
+        if ":" in part:
+            key, _, value = part.partition(":")
+            decls[key.strip().lower()] = value.strip()
+    return decls
+
+
+def _parse_color(value: str):
+    """Parse a CSS hex or rgb()/rgba() color into an (r, g, b) tuple, or None if unparseable."""
+    if not value:
+        return None
+    value = value.strip().lower()
+    if value.startswith("#"):
+        hex_part = value[1:]
+        if len(hex_part) == 3:
+            try:
+                return tuple(int(c * 2, 16) for c in hex_part)
+            except ValueError:
+                return None
+        if len(hex_part) == 6:
+            try:
+                return tuple(int(hex_part[i:i + 2], 16) for i in (0, 2, 4))
+            except ValueError:
+                return None
+        return None
+    if value.startswith("rgb"):
+        nums = re.findall(r"[\d.]+", value)
+        if len(nums) >= 3:
+            try:
+                return tuple(max(0, min(255, int(float(n)))) for n in nums[:3])
+            except ValueError:
+                return None
+    return None
+
+
+def _relative_luminance(rgb) -> float:
+    """WCAG relative luminance of an (r, g, b) tuple (0-255 channels)."""
+    def channel(c):
+        c = c / 255.0
+        return c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4
+    r, g, b = rgb
+    return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b)
+
+
+def _contrast_ratio(c1, c2) -> float:
+    """WCAG contrast ratio between two (r, g, b) colors (always >= 1.0)."""
+    l1 = _relative_luminance(c1)
+    l2 = _relative_luminance(c2)
+    lighter, darker = max(l1, l2), min(l1, l2)
+    return (lighter + 0.05) / (darker + 0.05)
+
+
+# --------------------------------------------
+# SCORING ENGINE (multiplicative retention model)
+# --------------------------------------------
+# Each category score = 100 * product of per-finding retention factors.
+# A finding multiplies the running score by a severity-based factor in (0, 1].
+# This is bounded to (0, 100], never clamps to 0, and needs no hard caps:
+# many small issues compound gently, one critical issue dominates correctly.
+SCORING_VERSION = 2
+
+# How much of the score a single finding RETAINS, by severity tier.
+# Lower = harsher. Tunable.
+TIER_RETENTION = {
+    "critical": 0.55,
+    "serious": 0.80,
+    "moderate": 0.92,
+    "minor": 0.97,
+}
+
+# Category weights for the overall (must sum to 1.0).
+CATEGORY_WEIGHTS = {
+    "performance": 0.25,
+    "seo": 0.25,
+    "accessibility": 0.30,
+    "security": 0.20,
+}
+
+# A critical security finding caps the headline overall at this ceiling,
+# so a single catastrophic hole (e.g. no HTTPS) can't be averaged away.
+CRITICAL_OVERALL_CAP = 59.0
+
+
+class Findings:
+    """Accumulates audit findings and computes a multiplicative retention score.
+
+    Repeated violations of the same finding compound sub-linearly via a
+    1 + ln(count) exponent: count=1 applies the tier factor once, larger
+    counts keep lowering the score (so 4 vs 40 violations still differ) but
+    never collapse it to exactly 0.
+
+    Backward compatible: result() still exposes {"score", "issues"}; it also
+    adds {"tiers", "has_critical"} which downstream callers may ignore.
+    """
+
+    def __init__(self):
+        self.issues = []      # message strings, in order (existing contract)
+        self.tiers = []       # parallel severity tier per issue
+        self._factors = []    # retention factor per scored finding
+        self.has_critical = False
+
+    def add(self, message: str, tier: str, count: int = 1):
+        """Record a scored finding. `count` scales severity sub-linearly."""
+        self.issues.append(message)
+        self.tiers.append(tier)
+        base = TIER_RETENTION[tier]
+        exponent = 1.0 + math.log(count) if count and count > 1 else 1.0
+        self._factors.append(base ** exponent)
+        if tier == "critical":
+            self.has_critical = True
+
+    def note(self, message: str):
+        """Surface an informational message without affecting the score."""
+        self.issues.append(message)
+        self.tiers.append("info")
+
+    def result(self) -> dict:
+        score = 100.0
+        for factor in self._factors:
+            score *= factor
+        return {
+            "score": round(max(score, 0.0), 1),
+            "issues": self.issues,
+            "tiers": self.tiers,
+            "has_critical": self.has_critical,
+        }
+
+
+def _letter_grade(score: float) -> str:
+    if score >= 90:
+        return "A"
+    if score >= 80:
+        return "B"
+    if score >= 70:
+        return "C"
+    if score >= 60:
+        return "D"
+    return "F"
 
 
 # -----------------------------------------
@@ -27,13 +176,33 @@ def run_audit(url: str) -> dict:
     accessibility = audit_accessibility(soup)
     security = audit_security(url, response)
 
-    overall = round(
-        (performance["score"] * 0.25) +
-        (seo["score"] * 0.25) +
-        (accessibility["score"] * 0.30) +
-        (security["score"] * 0.20),
-        1
+    categories = {
+        "performance": performance,
+        "seo": seo,
+        "accessibility": accessibility,
+        "security": security,
+    }
+
+    # Overall = weighted GEOMETRIC mean of category scores. Unlike an
+    # arithmetic mean, a single weak category drags the overall down hard —
+    # it can't be averaged away by strong categories. Scores are floored at
+    # 1.0 before the log so a 0 category yields a low (not undefined) overall.
+    log_sum = sum(
+        weight * math.log(max(categories[name]["score"], 1.0))
+        for name, weight in CATEGORY_WEIGHTS.items()
     )
+    overall = math.exp(log_sum)
+
+    # Critical gate: a critical SECURITY finding (e.g. no HTTPS, expired cert)
+    # caps the headline so it can never read as a passing grade.
+    if security.get("has_critical"):
+        overall = min(overall, CRITICAL_OVERALL_CAP)
+    overall = round(overall, 1)
+
+    # Aggregate severity tier counts across all categories (skip "info").
+    tier_counts = Counter()
+    for cat in categories.values():
+        tier_counts.update(t for t in cat.get("tiers", []) if t != "info")
 
     result = {
         "url": url,
@@ -58,11 +227,20 @@ def run_audit(url: str) -> dict:
             accessibility["issues"] +
             security["issues"]
         ),
+        # --- Additive scoring metadata (v2) — older consumers can ignore ---
+        "grade": _letter_grade(overall),
+        "tier_counts": {
+            "critical": tier_counts.get("critical", 0),
+            "serious": tier_counts.get("serious", 0),
+            "moderate": tier_counts.get("moderate", 0),
+            "minor": tier_counts.get("minor", 0),
+        },
+        "scoring_version": SCORING_VERSION,
         "ai_summary": None,
         "error": None
     }
 
-    print(f"[Vigil] Audit complete for {url} — Overall: {overall}")
+    print(f"[Vigil] Audit complete for {url} — Overall: {overall} ({result['grade']})")
     return result
 
 
@@ -95,22 +273,17 @@ def fetch_page(url: str) -> dict | None:
 # PERFORMANCE AUDIT
 # --------------------------------------------
 def audit_performance(soup, html: str, load_time: float, response) -> dict:
-    issues = []
-    score = 100
+    f = Findings()
 
-    # Load time — tiered penalties
+    # Load time — tiered severity
     if load_time > 5:
-        issues.append(f"Very slow load time: {load_time}s (target: under 1.5s)")
-        score -= 40
+        f.add(f"Very slow load time: {load_time}s (target: under 1.5s)", "serious")
     elif load_time > 3:
-        issues.append(f"Slow load time: {load_time}s (target: under 3s)")
-        score -= 30
+        f.add(f"Slow load time: {load_time}s (target: under 3s)", "serious")
     elif load_time > 2:
-        issues.append(f"Moderate load time: {load_time}s (target: under 2s)")
-        score -= 20
+        f.add(f"Moderate load time: {load_time}s (target: under 2s)", "moderate")
     elif load_time > 1.5:
-        issues.append(f"Slightly slow load time: {load_time}s (target: under 1.5s)")
-        score -= 10
+        f.add(f"Slightly slow load time: {load_time}s (target: under 1.5s)", "minor")
 
     # Page size — only penalize if serving uncompressed
     # Sites using gzip/brotli serve much smaller payloads over the wire
@@ -118,16 +291,13 @@ def audit_performance(soup, html: str, load_time: float, response) -> dict:
     encoding = response.headers.get("Content-Encoding", "")
     is_compressed = any(enc in encoding.lower() for enc in ["gzip", "br", "deflate"])
     if html_size_kb > 2000:
-        issues.append(f"Very large HTML size: {round(html_size_kb)}KB — even compressed this is excessive")
-        score -= 20
+        f.add(f"Very large HTML size: {round(html_size_kb)}KB — even compressed this is excessive", "moderate")
     elif html_size_kb > 1000 and not is_compressed:
-        issues.append(f"Large uncompressed HTML: {round(html_size_kb)}KB — enable gzip/brotli compression")
-        score -= 15
+        f.add(f"Large uncompressed HTML: {round(html_size_kb)}KB — enable gzip/brotli compression", "moderate")
     elif html_size_kb > 500 and not is_compressed:
-        issues.append(f"HTML not compressed: {round(html_size_kb)}KB — enable gzip/brotli to improve load time")
-        score -= 8
+        f.add(f"HTML not compressed: {round(html_size_kb)}KB — enable gzip/brotli to improve load time", "minor")
     elif html_size_kb > 500 and is_compressed:
-        issues.append(f"Note: Raw HTML is {round(html_size_kb)}KB but served compressed — monitor if growing")
+        f.note(f"Note: Raw HTML is {round(html_size_kb)}KB but served compressed — monitor if growing")
 
     # Render-blocking scripts in <head>
     # Check attrs dict directly — BeautifulSoup returns "" for valueless
@@ -139,11 +309,9 @@ def audit_performance(soup, html: str, load_time: float, response) -> dict:
             if "async" not in script.attrs and "defer" not in script.attrs:
                 blocking_scripts += 1
     if blocking_scripts > 2:
-        issues.append(f"{blocking_scripts} render-blocking scripts in <head> (critical)")
-        score -= min(blocking_scripts * 5, 40)  # capped at -40
+        f.add(f"{blocking_scripts} render-blocking scripts in <head> (critical)", "serious", count=blocking_scripts)
     elif blocking_scripts > 0:
-        issues.append(f"{blocking_scripts} render-blocking script(s) found in <head>")
-        score -= blocking_scripts * 5
+        f.add(f"{blocking_scripts} render-blocking script(s) found in <head>", "moderate", count=blocking_scripts)
 
     # Images without width/height
     unsized_images = sum(
@@ -151,66 +319,76 @@ def audit_performance(soup, html: str, load_time: float, response) -> dict:
         if not img.get("width") or not img.get("height")
     )
     if unsized_images > 5:
-        issues.append(f"{unsized_images} images missing width/height (causes layout shift)")
-        score -= 15
+        f.add(f"{unsized_images} images missing width/height (causes layout shift)", "moderate", count=unsized_images)
     elif unsized_images > 2:
-        issues.append(f"{unsized_images} images missing width/height (causes layout shift)")
-        score -= 8
+        f.add(f"{unsized_images} images missing width/height (causes layout shift)", "minor", count=unsized_images)
 
     # Inline styles
     inline_styles = len(soup.find_all(style=True))
     if inline_styles > 20:
-        issues.append(f"{inline_styles} elements using inline styles (hurts render performance)")
-        score -= 5
+        f.add(f"{inline_styles} elements using inline styles (hurts render performance)", "minor")
 
     # Mobile viewport tag
     viewport = soup.find("meta", {"name": "viewport"})
     if not viewport:
-        issues.append("Missing viewport meta tag — page is not mobile optimized")
-        score -= 10
+        f.add("Missing viewport meta tag — page is not mobile optimized", "serious")
 
-    return {"score": max(score, 0), "issues": issues}
+    # Font preload hints — web fonts without preload can block rendering (LCP)
+    # Count external font stylesheets (e.g. Google Fonts) and check for preload hints
+    if head:
+        font_preloads = head.find_all("link", attrs={"rel": "preload", "as": "font"})
+    else:
+        font_preloads = []
+    font_stylesheets = [
+        link for link in soup.find_all("link", rel="stylesheet")
+        if "font" in (link.get("href") or "").lower()
+    ]
+    if len(font_stylesheets) > 1 and not font_preloads:
+        f.add("No font preload hints found — web fonts may block rendering (LCP impact)", "moderate")
+
+    # Lazy loading — below-the-fold images (after the first 3) should defer loading
+    # Heuristic (we can't measure the real fold) → minor tier
+    all_imgs = soup.find_all("img")
+    below_fold_no_lazy = [
+        img for img in all_imgs[3:]
+        if (img.get("loading") or "").lower() != "lazy"
+    ]
+    if below_fold_no_lazy:
+        f.add(f"{len(below_fold_no_lazy)} below-the-fold image(s) missing loading='lazy'", "minor", count=len(below_fold_no_lazy))
+
+    return f.result()
 
 
 # --------------------------------------------
 # SEO AUDIT
 # --------------------------------------------
 def audit_seo(soup, url: str) -> dict:
-    issues = []
-    score = 100
+    f = Findings()
 
     # Title tag
     title = soup.find("title")
     if not title or not title.text.strip():
-        issues.append("Missing <title> tag")
-        score -= 20
+        f.add("Missing <title> tag", "serious")
     elif len(title.text.strip()) > 60:
-        issues.append(f"Title tag too long: {len(title.text.strip())} chars (target: under 60)")
-        score -= 5
+        f.add(f"Title tag too long: {len(title.text.strip())} chars (target: under 60)", "minor")
     elif len(title.text.strip()) < 10:
-        issues.append(f"Title tag too short: {len(title.text.strip())} chars (target: 10-60)")
-        score -= 5
+        f.add(f"Title tag too short: {len(title.text.strip())} chars (target: 10-60)", "minor")
 
     # Meta description
     meta_desc = soup.find("meta", {"name": "description"})
     if not meta_desc or not meta_desc.get("content", "").strip():
-        issues.append("Missing meta description")
-        score -= 15
+        f.add("Missing meta description", "serious")
     elif len(meta_desc.get("content", "")) > 160:
-        issues.append("Meta description too long (target: under 160 chars)")
-        score -= 5
+        f.add("Meta description too long (target: under 160 chars)", "minor")
     elif len(meta_desc.get("content", "")) < 50:
-        issues.append("Meta description too short (target: 50-160 chars)")
-        score -= 5
+        f.add("Meta description too short (target: 50-160 chars)", "minor")
 
     # H1 tag
     h1_tags = soup.find_all("h1")
     if len(h1_tags) == 0:
-        issues.append("No <h1> tag found on page")
-        score -= 15
+        f.add("No <h1> tag found on page", "serious")
     elif len(h1_tags) > 1:
-        issues.append(f"Multiple <h1> tags found ({len(h1_tags)}) — should only have one")
-        score -= 10
+        f.add(f"Multiple <h1> tags found ({len(h1_tags)}) — should only have one", "moderate")
 
     # Images missing alt text — same smart filter as accessibility checker
     def is_real_img(img):
@@ -229,38 +407,43 @@ def audit_seo(soup, url: str) -> dict:
     # alt="" is valid for decorative images — only flag truly missing alt attributes
     images_no_alt = [img for img in soup.find_all("img") if img.get("alt") is None and is_real_img(img)]
     if images_no_alt:
-        issues.append(f"{len(images_no_alt)} image(s) missing alt text")
-        score -= min(len(images_no_alt) * 3, 15)
+        f.add(f"{len(images_no_alt)} image(s) missing alt text", "moderate", count=len(images_no_alt))
 
     # Canonical tag
     canonical = soup.find("link", {"rel": "canonical"})
     if not canonical:
-        issues.append("No canonical tag found")
-        score -= 5
+        f.add("No canonical tag found", "minor")
 
     # Open Graph tags
     og_title = soup.find("meta", {"property": "og:title"})
     if not og_title:
-        issues.append("Missing Open Graph tags (og:title) — affects social sharing")
-        score -= 5
+        f.add("Missing Open Graph tags (og:title) — affects social sharing", "minor")
 
-    # Robots noindex check
+    # Additional social sharing tags — flag each missing one separately
+    # twitter:card uses the name= attribute; og:* use property=
+    social_checks = [
+        ("og:description", "property"),
+        ("og:image", "property"),
+        ("twitter:card", "name"),
+    ]
+    for tag_name, attr in social_checks:
+        if not soup.find("meta", {attr: tag_name}):
+            f.add(f"Missing {tag_name} tag — affects social sharing", "minor")
+
+    # Robots noindex check — deindexing is catastrophic for SEO
     robots = soup.find("meta", {"name": "robots"})
     if robots and "noindex" in robots.get("content", "").lower():
-        issues.append("Page has noindex meta tag — search engines will not index this page")
-        score -= 20
+        f.add("Page has noindex meta tag — search engines will not index this page", "critical")
 
     # Heading hierarchy
     headings = soup.find_all(["h1", "h2", "h3", "h4", "h5", "h6"])
     if headings and headings[0].name != "h1":
-        issues.append("Heading hierarchy starts with non-H1 tag — poor SEO structure")
-        score -= 5
+        f.add("Heading hierarchy starts with non-H1 tag — poor SEO structure", "minor")
 
     # Structured data (JSON-LD)
     json_ld = soup.find("script", {"type": "application/ld+json"})
     if not json_ld:
-        issues.append("No structured data (JSON-LD) found — missing rich result eligibility")
-        score -= 5
+        f.add("No structured data (JSON-LD) found — missing rich result eligibility", "minor")
 
     # Sitemap check
     parsed = urlparse(url)
@@ -268,18 +451,15 @@ def audit_seo(soup, url: str) -> dict:
     try:
         sitemap_res = requests.get(f"{base_url}/sitemap.xml", timeout=5)
         if sitemap_res.status_code != 200:
-            issues.append("No sitemap.xml found — search engines may miss pages")
-            score -= 5
+            f.add("No sitemap.xml found — search engines may miss pages", "minor")
     except Exception:
-        issues.append("Could not check for sitemap.xml")
-        score -= 3
+        f.note("Could not check for sitemap.xml")
 
     # Robots.txt check
     try:
         robots_res = requests.get(f"{base_url}/robots.txt", timeout=5)
         if robots_res.status_code != 200:
-            issues.append("No robots.txt found")
-            score -= 3
+            f.add("No robots.txt found", "minor")
     except Exception:
         pass
 
@@ -322,18 +502,19 @@ def audit_seo(soup, url: str) -> dict:
                 pass
 
     if broken_links:
-        issues.append(f"{len(broken_links)} broken link(s) found (404): {', '.join(broken_links[:3])}")
-        score -= min(len(broken_links) * 5, 20)
+        f.add(
+            f"{len(broken_links)} broken link(s) found (404): {', '.join(broken_links[:3])}",
+            "serious", count=len(broken_links)
+        )
 
-    return {"score": max(score, 0), "issues": issues}
+    return f.result()
 
 
 # --------------------------------------------
 # ACCESSIBILITY AUDIT (WCAG AA)
 # --------------------------------------------
 def audit_accessibility(soup) -> dict:
-    issues = []
-    score = 100
+    f = Findings()
 
     # Images missing alt text
     # Filters out: lazy-loaded placeholders, data URIs, 1x1 tracking pixels,
@@ -367,10 +548,10 @@ def audit_accessibility(soup) -> dict:
     ]
     real_images = [img for img in all_images if is_real_image(img)]
     if images_no_alt:
-        issues.append(
-            f"ADA: {len(images_no_alt)} of {len(real_images)} image(s) missing alt text (WCAG 1.1.1)"
+        f.add(
+            f"ADA: {len(images_no_alt)} of {len(real_images)} image(s) missing alt text (WCAG 1.1.1)",
+            "moderate", count=len(images_no_alt)
         )
-        score -= min(len(images_no_alt) * 5, 25)
 
     # Form inputs missing labels
     unlabeled = 0
@@ -383,8 +564,7 @@ def audit_accessibility(soup) -> dict:
         if not has_label and not has_aria:
             unlabeled += 1
     if unlabeled > 0:
-        issues.append(f"ADA: {unlabeled} form input(s) missing accessible labels (WCAG 1.3.1)")
-        score -= min(unlabeled * 8, 20)
+        f.add(f"ADA: {unlabeled} form input(s) missing accessible labels (WCAG 1.3.1)", "serious", count=unlabeled)
 
     # Buttons with no accessible name
     empty_buttons = [
@@ -395,8 +575,7 @@ def audit_accessibility(soup) -> dict:
         and not btn.get("title")
     ]
     if empty_buttons:
-        issues.append(f"ADA: {len(empty_buttons)} button(s) with no accessible name (WCAG 4.1.2)")
-        score -= min(len(empty_buttons) * 5, 15)
+        f.add(f"ADA: {len(empty_buttons)} button(s) with no accessible name (WCAG 4.1.2)", "serious", count=len(empty_buttons))
 
     # Links with non-descriptive text
     vague_links = [
@@ -407,14 +586,12 @@ def audit_accessibility(soup) -> dict:
         ]
     ]
     if vague_links:
-        issues.append(f"ADA: {len(vague_links)} link(s) with non-descriptive text (WCAG 2.4.4)")
-        score -= min(len(vague_links) * 3, 10)
+        f.add(f"ADA: {len(vague_links)} link(s) with non-descriptive text (WCAG 2.4.4)", "minor", count=len(vague_links))
 
     # Missing lang attribute on <html>
     html_tag = soup.find("html")
     if html_tag and not html_tag.get("lang"):
-        issues.append("ADA: <html> tag missing lang attribute (WCAG 3.1.1)")
-        score -= 10
+        f.add("ADA: <html> tag missing lang attribute (WCAG 3.1.1)", "serious")
 
     # Missing skip navigation link
     skip_link = (
@@ -424,8 +601,7 @@ def audit_accessibility(soup) -> dict:
         soup.find("a", string=lambda t: t and "skip" in t.lower())
     )
     if not skip_link:
-        issues.append("ADA: No skip navigation link found (WCAG 2.4.1)")
-        score -= 5
+        f.add("ADA: No skip navigation link found (WCAG 2.4.1)", "minor")
 
     # Links opening in new tab without warning
     new_tab_links = [
@@ -433,14 +609,12 @@ def audit_accessibility(soup) -> dict:
         if not a.get("aria-label") and "new" not in (a.text or "").lower()
     ]
     if len(new_tab_links) > 3:
-        issues.append(f"ADA: {len(new_tab_links)} link(s) open in new tab without user warning (WCAG 3.2.2)")
-        score -= 5
+        f.add(f"ADA: {len(new_tab_links)} link(s) open in new tab without user warning (WCAG 3.2.2)", "minor")
 
     # Tables missing headers
     tables_no_headers = [t for t in soup.find_all("table") if not t.find("th")]
     if tables_no_headers:
-        issues.append(f"ADA: {len(tables_no_headers)} table(s) missing header cells <th> (WCAG 1.3.1)")
-        score -= min(len(tables_no_headers) * 5, 10)
+        f.add(f"ADA: {len(tables_no_headers)} table(s) missing header cells <th> (WCAG 1.3.1)", "moderate", count=len(tables_no_headers))
 
     # ── NEW: ARIA landmark regions ──────────────────────────────────────
     landmarks = {
@@ -451,11 +625,11 @@ def audit_accessibility(soup) -> dict:
     }
     missing_landmarks = [k for k, v in landmarks.items() if not v]
     if missing_landmarks:
-        issues.append(
+        f.add(
             f"ADA: Missing ARIA landmark region(s): {', '.join(f'<{l}>' for l in missing_landmarks)} "
-            f"— screen readers cannot navigate page structure (WCAG 1.3.6)"
+            f"— screen readers cannot navigate page structure (WCAG 1.3.6)",
+            "moderate", count=len(missing_landmarks)
         )
-        score -= len(missing_landmarks) * 5
 
     # ── NEW: Video captions check ───────────────────────────────────────
     videos_no_captions = [
@@ -464,11 +638,11 @@ def audit_accessibility(soup) -> dict:
            not v.find("track", {"kind": "subtitles"})
     ]
     if videos_no_captions:
-        issues.append(
+        f.add(
             f"ADA: {len(videos_no_captions)} video(s) missing captions/subtitles (WCAG 1.2.2) "
-            f"— major ADA liability"
+            f"— major ADA liability",
+            "serious", count=len(videos_no_captions)
         )
-        score -= min(len(videos_no_captions) * 10, 20)
 
     # ── NEW: iframes missing title ──────────────────────────────────────
     iframes_no_title = [
@@ -476,63 +650,100 @@ def audit_accessibility(soup) -> dict:
         if not f.get("title") and not f.get("aria-label")
     ]
     if iframes_no_title:
-        issues.append(
-            f"ADA: {len(iframes_no_title)} iframe(s) missing title attribute (WCAG 4.1.2)"
+        f.add(
+            f"ADA: {len(iframes_no_title)} iframe(s) missing title attribute (WCAG 4.1.2)",
+            "moderate", count=len(iframes_no_title)
         )
-        score -= min(len(iframes_no_title) * 5, 10)
 
-    return {"score": max(score, 0), "issues": issues}
+    # ── NEW: Color contrast (WCAG 1.4.3) ────────────────────────────────
+    # Only elements that set BOTH color and background-color inline can be
+    # evaluated deterministically — we need two colors to compute a ratio.
+    low_contrast = 0
+    for el in soup.find_all(style=True):
+        decls = _parse_inline_style(el["style"])
+        if "color" not in decls or "background-color" not in decls:
+            continue
+        fg = _parse_color(decls.get("color"))
+        bg = _parse_color(decls.get("background-color"))
+        if not fg or not bg:
+            continue
+        ratio = _contrast_ratio(fg, bg)
+        # Large text = font-size >= 18px, or >= 14px when bold
+        font_size = None
+        m = re.match(r"([\d.]+)px", decls.get("font-size", ""))
+        if m:
+            font_size = float(m.group(1))
+        weight = decls.get("font-weight", "")
+        is_bold = weight in ("bold", "bolder") or (weight.isdigit() and int(weight) >= 700)
+        is_large = font_size is not None and (
+            font_size >= 18 or (font_size >= 14 and is_bold)
+        )
+        threshold = 3.0 if is_large else 4.5
+        if ratio < threshold:
+            low_contrast += 1
+    if low_contrast:
+        f.add(f"ADA: Low color contrast on {low_contrast} element(s) (WCAG 1.4.3)", "serious", count=low_contrast)
+
+    # ── NEW: Touch target size (WCAG 2.5.8) ─────────────────────────────
+    # Flag <a>/<button> with an explicit inline width or height under 24px
+    small_targets = 0
+    for el in soup.find_all(["a", "button"], style=True):
+        decls = _parse_inline_style(el["style"])
+        too_small = False
+        for prop in ("width", "height"):
+            m = re.match(r"([\d.]+)px", decls.get(prop, ""))
+            if m and float(m.group(1)) < 24:
+                too_small = True
+        if too_small:
+            small_targets += 1
+    if small_targets:
+        f.add(
+            f"ADA: {small_targets} interactive element(s) below 24x24px touch target size (WCAG 2.5.8)",
+            "moderate", count=small_targets
+        )
+
+    return f.result()
 
 
 # --------------------------------------------
 # SECURITY AUDIT
 # --------------------------------------------
 def audit_security(url: str, response) -> dict:
-    issues = []
-    score = 100
+    f = Findings()
     headers = response.headers
 
-    # HTTPS check
+    # HTTPS check — no transport encryption is a critical, gating failure
     if not url.startswith("https://"):
-        issues.append("Site is not using HTTPS — data is transmitted insecurely")
-        score -= 40
+        f.add("Site is not using HTTPS — data is transmitted insecurely", "critical")
 
     # Security headers
     if not headers.get("X-Frame-Options"):
-        issues.append("Missing X-Frame-Options header (clickjacking risk)")
-        score -= 10
+        f.add("Missing X-Frame-Options header (clickjacking risk)", "moderate")
 
     if not headers.get("X-Content-Type-Options"):
-        issues.append("Missing X-Content-Type-Options header (MIME sniffing risk)")
-        score -= 10
+        f.add("Missing X-Content-Type-Options header (MIME sniffing risk)", "moderate")
 
     if not headers.get("Strict-Transport-Security"):
-        issues.append("Missing Strict-Transport-Security (HSTS) header")
-        score -= 10
+        f.add("Missing Strict-Transport-Security (HSTS) header", "moderate")
 
     if not headers.get("Content-Security-Policy"):
-        issues.append("Missing Content-Security-Policy header (XSS risk)")
-        score -= 15
+        f.add("Missing Content-Security-Policy header (XSS risk)", "serious")
 
     if not headers.get("Referrer-Policy"):
-        issues.append("Missing Referrer-Policy header")
-        score -= 5
+        f.add("Missing Referrer-Policy header", "minor")
 
     if not headers.get("Permissions-Policy"):
-        issues.append("Missing Permissions-Policy header (controls browser feature access)")
-        score -= 5
+        f.add("Missing Permissions-Policy header (controls browser feature access)", "minor")
 
     # Server header exposes tech stack
     server = headers.get("Server", "")
     if server and any(v in server.lower() for v in ["apache", "nginx", "iis", "php"]):
-        issues.append(f"Server header exposes technology stack: '{server}'")
-        score -= 5
+        f.add(f"Server header exposes technology stack: '{server}'", "minor")
 
     # X-Powered-By exposes backend
     powered_by = headers.get("X-Powered-By", "")
     if powered_by:
-        issues.append(f"X-Powered-By header exposes backend technology: '{powered_by}'")
-        score -= 5
+        f.add(f"X-Powered-By header exposes backend technology: '{powered_by}'", "minor")
 
     # Mixed content
     if url.startswith("https://") and response.text:
@@ -543,8 +754,7 @@ def audit_security(url: str, response) -> dict:
             if (tag.get("src") or tag.get("href") or "").startswith("http://")
         ]
         if mixed:
-            issues.append(f"Mixed content: {len(mixed)} resource(s) loaded over HTTP on HTTPS page")
-            score -= min(len(mixed) * 5, 15)
+            f.add(f"Mixed content: {len(mixed)} resource(s) loaded over HTTP on HTTPS page", "serious", count=len(mixed))
 
     # ── NEW: SSL certificate expiry check ──────────────────────────────
     if url.startswith("https://"):
@@ -558,20 +768,15 @@ def audit_security(url: str, response) -> dict:
                 expiry = datetime.strptime(cert["notAfter"], "%b %d %H:%M:%S %Y %Z")
                 days_left = (expiry - datetime.utcnow()).days
                 if days_left < 0:
-                    issues.append("SSL certificate has EXPIRED — site will show security warnings")
-                    score -= 40
+                    f.add("SSL certificate has EXPIRED — site will show security warnings", "critical")
                 elif days_left < 14:
-                    issues.append(f"SSL certificate expires in {days_left} days — CRITICAL, renew immediately")
-                    score -= 30
+                    f.add(f"SSL certificate expires in {days_left} days — CRITICAL, renew immediately", "serious")
                 elif days_left < 30:
-                    issues.append(f"SSL certificate expires in {days_left} days — renew urgently")
-                    score -= 20
+                    f.add(f"SSL certificate expires in {days_left} days — renew urgently", "moderate")
                 elif days_left < 60:
-                    issues.append(f"SSL certificate expires in {days_left} days — schedule renewal soon")
-                    score -= 10
+                    f.add(f"SSL certificate expires in {days_left} days — schedule renewal soon", "minor")
         except ssl.SSLError as e:
-            issues.append(f"SSL certificate error: {str(e)}")
-            score -= 20
+            f.add(f"SSL certificate error: {str(e)}", "serious")
         except Exception as e:
             print(f"[Vigil] SSL check failed: {e}")
 
@@ -579,16 +784,13 @@ def audit_security(url: str, response) -> dict:
     set_cookie = headers.get("Set-Cookie", "")
     if set_cookie:
         if "httponly" not in set_cookie.lower():
-            issues.append("Cookie missing HttpOnly flag — vulnerable to XSS cookie theft")
-            score -= 5
+            f.add("Cookie missing HttpOnly flag — vulnerable to XSS cookie theft", "moderate")
         if "secure" not in set_cookie.lower():
-            issues.append("Cookie missing Secure flag — can be transmitted over HTTP")
-            score -= 5
+            f.add("Cookie missing Secure flag — can be transmitted over HTTP", "moderate")
         if "samesite" not in set_cookie.lower():
-            issues.append("Cookie missing SameSite flag — vulnerable to CSRF attacks")
-            score -= 5
+            f.add("Cookie missing SameSite flag — vulnerable to CSRF attacks", "moderate")
 
-    return {"score": max(score, 0), "issues": issues}
+    return f.result()
 
 
 # --------------------------------------------
