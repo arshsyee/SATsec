@@ -72,8 +72,14 @@ export default function Landing() {
         <div className="hidden md:flex gap-8">
           <span onClick={() => navigate('/features')} className="text-sm text-[#8899aa] hover:text-[#e8edf5] transition-colors cursor-pointer">Features</span>
           <span onClick={() => navigate('/dashboard')} className="text-sm text-[#8899aa] hover:text-[#e8edf5] transition-colors cursor-pointer">Dashboard</span>
-          <span className="text-sm text-[#8899aa] hover:text-[#e8edf5] transition-colors cursor-pointer">Pricing</span>
-          <span className="text-sm text-[#8899aa] hover:text-[#e8edf5] transition-colors cursor-pointer">Docs</span>
+          <span className="text-sm text-[#3a4f63] cursor-default flex items-center gap-1.5" title="Coming soon">
+            Pricing
+            <span className="text-[9px] font-mono uppercase tracking-wider bg-white/[0.05] border border-white/10 text-[#5a7080] px-1.5 py-0.5 rounded">soon</span>
+          </span>
+          <span className="text-sm text-[#3a4f63] cursor-default flex items-center gap-1.5" title="Coming soon">
+            Docs
+            <span className="text-[9px] font-mono uppercase tracking-wider bg-white/[0.05] border border-white/10 text-[#5a7080] px-1.5 py-0.5 rounded">soon</span>
+          </span>
         </div>
         {isLoggedIn ? (
           <div className="flex items-center gap-3">

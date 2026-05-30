@@ -7,6 +7,9 @@ import {
 import { getRecentAudits, getHistory } from '../api'
 import { useAuth } from '../contexts/AuthContext'
 import { getGuestAudits } from '../utils/guestStorage'
+import WelcomeModal from '../components/WelcomeModal'
+
+const ONBOARDED_KEY = 'vigil_onboarded'
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -58,6 +61,19 @@ export default function Dashboard() {
   const [activeLine,   setActiveLine]   = useState('all')
   const [loading,      setLoading]      = useState(true)
   const [error,        setError]        = useState(null)
+  const [showWelcome,  setShowWelcome]  = useState(false)
+
+  // First-run tutorial: show once per browser for logged-in users.
+  useEffect(() => {
+    if (isLoggedIn && !localStorage.getItem(ONBOARDED_KEY)) {
+      setShowWelcome(true)
+    }
+  }, [isLoggedIn])
+
+  const dismissWelcome = () => {
+    localStorage.setItem(ONBOARDED_KEY, '1')
+    setShowWelcome(false)
+  }
 
   const openSettings = () => {
     if (isLoggedIn) {
@@ -134,6 +150,8 @@ export default function Dashboard() {
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-[#080c14] text-[#e8edf5] font-sans">
+
+      {showWelcome && <WelcomeModal username={user?.username} onClose={dismissWelcome} />}
 
       {/* Grid bg */}
       <div className="fixed inset-0 z-0 pointer-events-none"

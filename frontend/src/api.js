@@ -17,6 +17,14 @@ export async function runAudit(url, signal) {
     body: JSON.stringify({ url }),
     signal,
   })
+  if (res.status === 429) {
+    const retry = res.headers.get('Retry-After')
+    throw new Error(
+      retry
+        ? `Too many requests — please wait ${retry}s and try again.`
+        : 'Too many requests — please slow down and try again shortly.'
+    )
+  }
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: res.statusText }))
     throw new Error(err.detail || 'Audit failed')
