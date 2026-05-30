@@ -49,7 +49,7 @@ export default function Login() {
 
         <div className="bg-white/[0.025] border border-white/[0.07] rounded-2xl p-8">
           <h2 className="text-lg font-medium text-[#f0f4fa] mb-1">Sign in</h2>
-          <p className="text-xs text-[#4a6070] font-mono mb-6">// use username or email</p>
+          <p className="text-xs text-[#4a6070] font-mono mb-6">use username or email</p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>

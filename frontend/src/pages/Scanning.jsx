@@ -145,13 +145,13 @@ export default function Scanning() {
 
         {animDone && !apiResult && !apiError && (
           <p className="text-blue-400 font-mono text-sm mt-6 animate-pulse">
-            // finalizing results...
+            finalizing results...
           </p>
         )}
 
         {done && !apiError && (
           <p className="text-green-400 font-mono text-sm mt-6 animate-pulse">
-            // audit complete — loading results...
+            audit complete — loading results...
           </p>
         )}
       </div>

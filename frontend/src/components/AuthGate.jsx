@@ -18,7 +18,7 @@ export default function AuthGate({ children }) {
     return (
       <div className="min-h-screen bg-[#080c14] flex items-center justify-center">
         <div className="text-center">
-          <p className="text-[#4a6070] font-mono text-sm mb-4">// sign in to access this feature</p>
+          <p className="text-[#4a6070] font-mono text-sm mb-4">sign in to access this feature</p>
         </div>
         <AuthModal onClose={() => {}} onSuccess={() => setDismissed(false)} />
       </div>

@@ -85,7 +85,7 @@ export default function ImportAuditsModal({ audits, onDone }) {
         {view === 'ask' && (
           <>
             <p className="text-xs text-[#8899aa] font-mono mb-4">
-              // {audits.length} audit{audits.length !== 1 ? 's' : ''} from your guest session
+              {audits.length} audit{audits.length !== 1 ? 's' : ''} from your guest session
             </p>
             <p className="text-sm text-[#c8d8e8] mb-5 leading-relaxed">
               Would you like to import your guest audits into your account?
@@ -116,7 +116,7 @@ export default function ImportAuditsModal({ audits, onDone }) {
         {/* Select view */}
         {view === 'select' && (
           <>
-            <p className="text-xs text-[#8899aa] font-mono mb-3">// select audits to import</p>
+            <p className="text-xs text-[#8899aa] font-mono mb-3">select audits to import</p>
             <div className="space-y-2 max-h-48 overflow-y-auto mb-4 pr-1">
               {audits.map(a => (
                 <label
@@ -162,7 +162,7 @@ export default function ImportAuditsModal({ audits, onDone }) {
         {/* Loading view */}
         {view === 'loading' && (
           <div className="py-4 text-center">
-            <p className="text-sm text-[#7a9ab8] font-mono animate-pulse">// importing audits...</p>
+            <p className="text-sm text-[#7a9ab8] font-mono animate-pulse">importing audits...</p>
           </div>
         )}
 
@@ -173,7 +173,7 @@ export default function ImportAuditsModal({ audits, onDone }) {
               <span className="text-green-400 text-lg">✓</span>
               <p className="text-sm text-[#c8d8e8]">{imported} audit{imported !== 1 ? 's' : ''} imported</p>
             </div>
-            <p className="text-xs text-[#4a6070] font-mono mb-4">// added to your account history</p>
+            <p className="text-xs text-[#4a6070] font-mono mb-4">added to your account history</p>
             <button
               onClick={handleDone}
               className="w-full bg-white/[0.04] hover:bg-white/[0.07] border border-white/[0.08] text-[#c8d8e8] text-sm py-2.5 rounded-xl transition-colors"

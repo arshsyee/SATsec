@@ -85,7 +85,7 @@ export default function AuditResults() {
         {/* Header */}
         <div className="mb-8">
           <h2 className="text-xl font-medium text-[#f0f4fa] mb-1">Audit Results — {displayUrl}</h2>
-          <p className="text-sm text-[#4a6070] font-mono">// overall score: {scores.overall} · {issueEntries.reduce((n, [, v]) => n + v.length, 0)} issues found</p>
+          <p className="text-sm text-[#4a6070] font-mono">overall score: {scores.overall} · {issueEntries.reduce((n, [, v]) => n + v.length, 0)} issues found</p>
         </div>
 
         {/* Score Cards */}
@@ -138,7 +138,7 @@ export default function AuditResults() {
           </div>
         </div>
 
-        <p className="text-center text-xs text-[#2e4050] font-mono mt-8">// Vigil audit engine v1.0</p>
+        <p className="text-center text-xs text-[#2e4050] font-mono mt-8">SATsec audit engine v1.0</p>
       </div>
     </div>
   )

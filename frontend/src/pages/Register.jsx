@@ -40,7 +40,7 @@ export default function Register() {
 
         <div className="bg-white/[0.025] border border-white/[0.07] rounded-2xl p-8">
           <h2 className="text-lg font-medium text-[#f0f4fa] mb-1">Create account</h2>
-          <p className="text-xs text-[#4a6070] font-mono mb-6">// free — no credit card required</p>
+          <p className="text-xs text-[#4a6070] font-mono mb-6">free — no credit card required</p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>

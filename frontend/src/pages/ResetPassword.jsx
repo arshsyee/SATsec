@@ -48,7 +48,7 @@ export default function ResetPassword() {
         <div className="bg-white/[0.025] border border-white/[0.07] rounded-2xl p-8">
           {!token ? (
             <div className="text-center">
-              <p className="text-sm text-red-400 font-mono mb-4">// invalid reset link</p>
+              <p className="text-sm text-red-400 font-mono mb-4">invalid reset link</p>
               <Link to="/forgot-password" className="text-xs text-blue-400 hover:text-blue-300 font-mono">
                 Request a new one →
               </Link>
@@ -70,7 +70,7 @@ export default function ResetPassword() {
           ) : (
             <>
               <h2 className="text-lg font-medium text-[#f0f4fa] mb-1">New password</h2>
-              <p className="text-xs text-[#4a6070] font-mono mb-6">// min. 8 characters</p>
+              <p className="text-xs text-[#4a6070] font-mono mb-6">min. 8 characters</p>
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>

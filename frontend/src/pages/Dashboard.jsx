@@ -182,13 +182,13 @@ export default function Dashboard() {
           <div>
             <h2 className="text-xl font-medium text-[#f0f4fa] mb-1">Performance Dashboard</h2>
             <p className="text-sm text-[#4a6070] font-mono">
-              // {recentAudits.length} audit{recentAudits.length !== 1 ? 's' : ''} across {auditedUrls.length} site{auditedUrls.length !== 1 ? 's' : ''}
+              {recentAudits.length} audit{recentAudits.length !== 1 ? 's' : ''} across {auditedUrls.length} site{auditedUrls.length !== 1 ? 's' : ''}
             </p>
           </div>
         </div>
 
         {loading && (
-          <div className="text-center py-20 text-[#4a6070] font-mono text-sm animate-pulse">// loading audits...</div>
+          <div className="text-center py-20 text-[#4a6070] font-mono text-sm animate-pulse">loading audits...</div>
         )}
 
         {error && (
@@ -199,7 +199,7 @@ export default function Dashboard() {
 
         {!loading && !error && recentAudits.length === 0 && (
           <div className="text-center py-24">
-            <p className="text-[#4a6070] font-mono text-sm mb-4">// no audits yet</p>
+            <p className="text-[#4a6070] font-mono text-sm mb-4">no audits yet</p>
             <button onClick={() => navigate('/')}
               className="bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium px-6 py-2.5 rounded-lg transition-colors">
               Run your first audit →
@@ -290,7 +290,7 @@ export default function Dashboard() {
 
             {history.length === 1 && (
               <div className="bg-white/[0.025] border border-white/[0.06] rounded-2xl p-6 mb-6 text-center">
-                <p className="text-[#4a6070] font-mono text-xs">// run at least 2 audits on this site to see trend chart</p>
+                <p className="text-[#4a6070] font-mono text-xs">run at least 2 audits on this site to see trend chart</p>
               </div>
             )}
 

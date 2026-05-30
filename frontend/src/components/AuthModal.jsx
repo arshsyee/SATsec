@@ -178,7 +178,7 @@ export default function AuthModal({ onClose, onSuccess, defaultTab = 'login' }) 
         {otpStep && (
           <form onSubmit={handleVerifyOtp} className="space-y-5">
             <div>
-              <p className="text-xs text-[#4a6070] font-mono mb-1">// code sent to</p>
+              <p className="text-xs text-[#4a6070] font-mono mb-1">code sent to</p>
               <p className="text-sm text-blue-400 font-mono mb-4">{otpStep.email}</p>
               <label className="text-xs text-[#7a9ab8] font-mono block mb-3">6-digit verification code</label>
               <div className="flex gap-2 justify-between" onPaste={handleOtpPaste}>

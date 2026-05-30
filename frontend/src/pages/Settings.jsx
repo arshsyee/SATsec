@@ -69,7 +69,7 @@ export default function Settings() {
         {/* Header */}
         <div className="mb-10">
           <h2 className="text-xl font-medium text-[#f0f4fa] mb-1">Monitoring Settings</h2>
-          <p className="text-sm text-[#4a6070] font-mono">// configure schedule and alerts for {url || '—'}</p>
+          <p className="text-sm text-[#4a6070] font-mono">configure schedule and alerts for {url || '—'}</p>
         </div>
 
         {/* Schedule */}
@@ -94,7 +94,7 @@ export default function Settings() {
                   {label}
                 </div>
                 <div className="text-xs text-[#4a6070] leading-relaxed">{desc}</div>
-                {schedule === value && <div className="mt-2 text-xs text-blue-400 font-mono">// active</div>}
+                {schedule === value && <div className="mt-2 text-xs text-blue-400 font-mono">active</div>}
               </div>
             ))}
           </div>
@@ -119,7 +119,7 @@ export default function Settings() {
           </div>
           <div className="mt-4 bg-white/[0.02] border border-white/[0.05] rounded-xl p-4">
             <p className="text-sm text-[#8899aa]">
-              Vigil will email you if <span className="text-white font-medium">any score drops below {threshold}</span>.
+              SATsec will email you if <span className="text-white font-medium">any score drops below {threshold}</span>.
               {threshold < 50 && <span className="text-red-400"> This is a very sensitive threshold.</span>}
               {threshold >= 80 && <span className="text-green-400"> This is a healthy threshold.</span>}
             </p>
@@ -137,12 +137,12 @@ export default function Settings() {
               placeholder="you@agency.com"
               className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-3 text-sm text-[#e8edf5] placeholder-[#3a4f63] outline-none focus:border-blue-500/50 transition-colors font-mono"
             />
-            <p className="text-xs text-[#3a5068] font-mono mt-3">// alerts will be sent to this address when scores drop</p>
+            <p className="text-xs text-[#3a5068] font-mono mt-3">alerts will be sent to this address when scores drop</p>
           </div>
         ) : (
           <div className="bg-blue-500/[0.06] border border-blue-500/20 rounded-2xl p-6 mb-6 text-center">
             <p className="text-sm text-[#c8d8e8] mb-1">Sign up to activate monitoring</p>
-            <p className="text-xs text-[#4a6070] font-mono mb-4">// your schedule selection will be saved</p>
+            <p className="text-xs text-[#4a6070] font-mono mb-4">your schedule selection will be saved</p>
             <button
               onClick={() => navigate('/register', { state: { url } })}
               className="bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium px-6 py-2.5 rounded-xl transition-colors"
@@ -181,12 +181,12 @@ export default function Settings() {
             </button>
 
             {!url && (
-              <p className="text-center text-xs text-red-400 font-mono mt-3">// no site selected — run an audit first</p>
+              <p className="text-center text-xs text-red-400 font-mono mt-3">no site selected — run an audit first</p>
             )}
           </>
         )}
 
-        <p className="text-center text-xs text-[#2e4050] font-mono mt-6">// Vigil will run its first scan within the next scheduled window</p>
+        <p className="text-center text-xs text-[#2e4050] font-mono mt-6">SATsec will run its first scan within the next scheduled window</p>
       </div>
     </div>
   )

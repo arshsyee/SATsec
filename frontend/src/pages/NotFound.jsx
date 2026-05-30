@@ -25,7 +25,7 @@ export default function NotFound() {
         <div className="font-mono text-8xl font-bold text-white/[0.05] mb-4 select-none">404</div>
         <h1 className="text-xl font-medium text-[#f0f4fa] mb-3">Page not found</h1>
         <p className="text-sm text-[#4a6070] font-mono mb-10">
-          // the page you're looking for doesn't exist or was moved
+          the page you're looking for doesn't exist or was moved
         </p>
 
         <div className="flex gap-3 justify-center">

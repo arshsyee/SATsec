@@ -92,7 +92,7 @@ export default function VerifyOtp() {
 
         <div className="bg-white/[0.025] border border-white/[0.07] rounded-2xl p-8">
           <h2 className="text-lg font-medium text-[#f0f4fa] mb-1">Verify your email</h2>
-          <p className="text-xs text-[#4a6070] font-mono mb-1">// code sent to</p>
+          <p className="text-xs text-[#4a6070] font-mono mb-1">code sent to</p>
           <p className="text-sm text-blue-400 font-mono mb-6">{email}</p>
 
           <form onSubmit={handleSubmit} className="space-y-6">
