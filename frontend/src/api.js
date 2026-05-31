@@ -49,6 +49,21 @@ export async function createSchedule({ url, interval_hours, alert_email, alert_t
   return res.json()
 }
 
+export async function listSchedules() {
+  const res = await fetch(`${BASE}/schedules`, { headers: authHeaders() })
+  if (!res.ok) throw new Error('Could not load monitors')
+  return res.json()
+}
+
+export async function deleteSchedule(scheduleId) {
+  const res = await fetch(`${BASE}/schedule/${scheduleId}`, {
+    method: 'DELETE',
+    headers: authHeaders(),
+  })
+  if (!res.ok) throw new Error('Failed to remove monitor')
+  return res.json()
+}
+
 // ─── Auth ─────────────────────────────────────────────────────────────────────
 
 export async function signup(username, email, password) {

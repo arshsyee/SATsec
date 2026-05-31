@@ -1,11 +1,13 @@
 import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { loginApi } from '../api'
 import { useAuth } from '../contexts/AuthContext'
 
 export default function Login() {
   const navigate    = useNavigate()
+  const location    = useLocation()
   const { login }   = useAuth()
+  const redirectTo  = location.state?.redirectTo || '/dashboard'
   const [identifier, setIdentifier] = useState('')
   const [password,   setPassword]   = useState('')
   const [error,      setError]      = useState(null)
@@ -18,12 +20,12 @@ export default function Login() {
     try {
       const { token, user } = await loginApi(identifier, password)
       login(token, user)
-      navigate('/dashboard')
+      navigate(redirectTo)
     } catch (err) {
       if (err.unverified) {
         // Email not yet verified — backend sent a fresh OTP; go to verify page
         navigate('/verify-otp', {
-          state: { userId: err.unverified.userId, email: err.unverified.email, redirectTo: '/dashboard' }
+          state: { userId: err.unverified.userId, email: err.unverified.email, redirectTo }
         })
         return
       }

@@ -22,8 +22,8 @@ import auth as auth_utils
 # ─────────────────────────────────────────
 
 app = FastAPI(
-    title="Vigil",
-    description="Always watching. Always reporting.",
+    title="SATsec",
+    description="Website performance, SEO, accessibility, and security audits.",
     version="1.0.0"
 )
 

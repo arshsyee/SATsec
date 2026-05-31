@@ -1,43 +1,24 @@
 import { useNavigate } from 'react-router-dom'
+import Backdrop from '../components/Backdrop'
+import Nav from '../components/Nav'
 
 export default function Features() {
   const navigate = useNavigate()
 
   return (
-    <div className="min-h-screen bg-[#080c14] text-[#e8edf5] font-sans overflow-x-hidden">
+    <div className="relative min-h-screen bg-void text-ink font-sans overflow-x-hidden">
 
-      {/* Grid background */}
-      <div className="fixed inset-0 z-0 pointer-events-none"
-        style={{
-          backgroundImage: 'linear-gradient(rgba(99,179,237,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(99,179,237,0.04) 1px, transparent 1px)',
-          backgroundSize: '48px 48px'
-        }}
-      />
-
-      {/* Nav */}
-      <nav className="relative z-10 flex items-center justify-between px-12 py-5 border-b border-white/5">
-        <div className="font-mono text-xl font-bold cursor-pointer" onClick={() => navigate('/')}>
-          SAT<span className="text-blue-500">sec</span>
-        </div>
-        <div className="hidden md:flex gap-8">
-          <span onClick={() => navigate('/features')} className="text-sm text-blue-400 cursor-pointer">Features</span>
-          <span onClick={() => navigate('/dashboard')} className="text-sm text-[#8899aa] hover:text-[#e8edf5] transition-colors cursor-pointer">Dashboard</span>
-          <span className="text-sm text-[#8899aa] hover:text-[#e8edf5] transition-colors cursor-pointer">Pricing</span>
-          <span className="text-sm text-[#8899aa] hover:text-[#e8edf5] transition-colors cursor-pointer">Docs</span>
-        </div>
-        <button onClick={() => navigate('/')} className="bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium px-5 py-2 rounded-lg transition-colors">
-          Run Audit
-        </button>
-      </nav>
+      <Backdrop />
+      <Nav active="features" />
 
       <div className="relative z-10 max-w-4xl mx-auto px-6 py-20">
 
         {/* Header */}
         <div className="text-center mb-16">
-          <h1 className="font-mono text-4xl md:text-5xl font-semibold tracking-tighter text-[#f0f4fa] mb-4">
+          <h1 className="font-display text-4xl md:text-5xl font-bold tracking-tight text-ink-bright mb-4">
             Features
           </h1>
-          <p className="text-lg text-[#7a8fa8] font-light max-w-xl mx-auto">
+          <p className="text-lg text-ink-dim max-w-xl mx-auto">
             Everything SATsec monitors, on every audit.
           </p>
         </div>
@@ -88,22 +69,22 @@ export default function Features() {
               img: '/features/06-ai-summaries.jpg',
             },
           ].map(({ num, title, desc, tags, img }) => (
-            <div key={title} className="relative overflow-hidden bg-white/[0.025] border border-white/[0.06] rounded-2xl hover:border-blue-500/20 transition-colors">
+            <div key={title} className="relative overflow-hidden panel hover:border-accent/20 transition-colors">
               <div
                 className="h-32 w-full"
                 style={{
-                  backgroundImage: `linear-gradient(to bottom, rgba(8,12,20,0.3), rgba(8,12,20,0.9)), url(${img})`,
+                  backgroundImage: `linear-gradient(to bottom, rgba(5,8,13,0.3), rgba(5,8,13,0.9)), url(${img})`,
                   backgroundSize: 'cover',
                   backgroundPosition: 'center',
                 }}
               />
               <div className="p-6 -mt-6 relative">
-                <div className="font-mono text-xs text-blue-400 mb-3">{num}</div>
-                <h3 className="font-mono text-base font-medium text-[#c8d8e8] mb-2">{title}</h3>
-                <p className="text-sm text-[#5a7080] leading-relaxed mb-4">{desc}</p>
+                <div className="font-mono text-xs text-accent mb-3">{num}</div>
+                <h3 className="font-display text-base font-bold text-ink mb-2">{title}</h3>
+                <p className="text-sm text-ink-dim leading-relaxed mb-4">{desc}</p>
                 <div className="flex gap-2 flex-wrap">
                   {tags.map(tag => (
-                    <span key={tag} className="text-xs bg-white/[0.04] border border-white/[0.08] text-[#6a8099] px-3 py-1 rounded-full font-mono">
+                    <span key={tag} className="text-xs bg-white/[0.04] border border-white/[0.08] text-ink-dim px-3 py-1 rounded-full font-mono">
                       {tag}
                     </span>
                   ))}
@@ -114,8 +95,8 @@ export default function Features() {
         </div>
 
         {/* Coming soon */}
-        <div className="bg-white/[0.025] border border-white/[0.06] rounded-2xl p-6 mb-10">
-          <p className="text-xs font-mono text-[#8899aa] uppercase tracking-widest mb-4">Coming Soon</p>
+        <div className="panel p-6 mb-10">
+          <p className="eyebrow mb-4">Coming Soon</p>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             {[
               'Multi-page Crawling',
@@ -126,18 +107,18 @@ export default function Features() {
               'Chrome Extension',
             ].map(title => (
               <div key={title} className="flex items-center gap-3 bg-white/[0.02] border border-white/[0.04] rounded-xl px-4 py-3">
-                <span className="font-mono text-xs text-blue-400/60">+</span>
-                <span className="font-mono text-sm text-[#4a6070]">{title}</span>
+                <span className="font-mono text-xs text-accent/60">+</span>
+                <span className="font-mono text-sm text-ink-faint">{title}</span>
               </div>
             ))}
           </div>
         </div>
 
         {/* CTA */}
-        <div className="bg-blue-500/[0.06] border border-blue-500/20 rounded-2xl p-8 text-center">
-          <h3 className="font-mono text-xl font-medium text-[#e8edf5] mb-2">Run your first audit.</h3>
-          <p className="text-sm text-[#4a6070] mb-6">No signup. Results in seconds.</p>
-          <button onClick={() => navigate('/')} className="bg-blue-500 hover:bg-blue-600 text-white text-sm font-mono font-medium px-8 py-3 rounded-lg transition-colors">
+        <div className="rounded-2xl border border-accent/20 bg-accent/[0.06] p-8 text-center">
+          <h3 className="font-display text-xl font-bold text-ink-bright mb-2">Run your first audit.</h3>
+          <p className="text-sm text-ink-faint mb-6">No signup. Results in seconds.</p>
+          <button onClick={() => navigate('/')} className="btn-accent text-sm px-8 py-3">
             Run Audit →
           </button>
         </div>

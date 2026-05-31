@@ -6,6 +6,7 @@ import AuditResults   from './pages/AuditResults'
 import Dashboard      from './pages/Dashboard'
 import Settings       from './pages/Settings'
 import Scanning       from './pages/Scanning'
+import Live           from './pages/Live'
 import NotFound       from './pages/NotFound'
 import Features       from './pages/Features'
 import Login          from './pages/Login'
@@ -33,6 +34,7 @@ function App() {
         <Routes>
           <Route path="/"                element={<Landing />} />
           <Route path="/scanning"        element={<Scanning />} />
+          <Route path="/live"            element={<Live />} />
           <Route path="/results"         element={<AuditResults />} />
           <Route path="/dashboard"       element={<Dashboard />} />
           <Route path="/settings"        element={<Settings />} />
