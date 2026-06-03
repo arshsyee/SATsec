@@ -10,21 +10,17 @@ Derived from `docs/feature-plans/` + `docs/roadmap.md`. Each item links its spec
 - [ ] **AI audit summaries** (1-2d) — `generate_ai_summary()` in `backend/main.py:142`
   returns hardcoded string. Wire Anthropic SDK (Haiku), cache on `AuditResult`,
   gate to Pro/Business. Spec: `feature-plans/ai-summaries.md`.
-- [ ] Add `boto3` to `backend/requirements.txt` (missing → startup crash).
+- [x] Add `boto3` to `backend/requirements.txt` (missing → startup crash). Also powers SES alerts + Bedrock AI summary.
 - [x] Rate limiting — per-IP throttle on `POST /audit`.
 - [ ] AWS SES — verify domain, test OTP + alert emails end-to-end.
 - [ ] UI polish — mobile responsiveness, loading/error states.
 - [x] Fix nav stubs — `/features` real content.
 
 ### Performance audit
-- [ ] **Link loading-page checkers to measured load time.**
-  Lazy-load (`loading="lazy"`) + font-preload checks in
-  `backend/audit.py::audit_performance` are static/heuristic — flag missing hints
-  regardless of real perf. Tie to `load_time` from `fetch_page`:
-  - Only escalate lazy-load / font-preload findings when `load_time` is slow, so a
-    fast page isn't penalised for hints it doesn't need.
-  - Surface them stronger when load time is poor and they're plausible causes
-    (LCP / render-blocking impact).
+- [x] **Link loading-page checkers to measured load time.**
+  Lazy-load + font-preload findings in `backend/audit.py::audit_performance` now
+  tier on `load_time`: serious/moderate when slow (>3s / >1.5s), demoted to an
+  informational note when the page already loads fast.
 
 ---
 
@@ -69,8 +65,10 @@ Derived from `docs/feature-plans/` + `docs/roadmap.md`. Each item links its spec
 
 ## Phase 4 — Launch Prep
 
-- [ ] Legal pages — `/privacy` + `/terms` (Data API requires ToS data-rights grant).
-- [ ] Error monitoring — Sentry (backend + frontend).
+- [x] Legal pages — `/privacy` + `/terms` (shared `LegalPage` component; ToS includes
+  the data-rights grant the Data API needs). Copy is a starter draft — review with counsel.
+- [x] Error monitoring — Sentry (backend + frontend). Both gated on DSN env var
+  (`SENTRY_DSN` / `VITE_SENTRY_DSN`) — no-op until set in production.
 - [ ] Uptime monitoring — external ping (interim until live-monitoring ships).
 - [ ] Load test — 50+ concurrent audits.
 - [ ] Beta program — 10-20 testers, fix top issues.

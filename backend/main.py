@@ -23,6 +23,21 @@ from scheduler import start_scheduler, add_scheduled_audit, remove_scheduled_aud
 import auth as auth_utils
 
 # ─────────────────────────────────────────
+# ERROR MONITORING (Sentry)
+# ─────────────────────────────────────────
+# Init before app creation so the FastAPI/Starlette integration wraps the app.
+# No-op when SENTRY_DSN is unset, so local/dev runs are unaffected.
+_SENTRY_DSN = os.getenv("SENTRY_DSN")
+if _SENTRY_DSN:
+    import sentry_sdk
+    sentry_sdk.init(
+        dsn=_SENTRY_DSN,
+        environment=os.getenv("SENTRY_ENVIRONMENT", "production"),
+        traces_sample_rate=float(os.getenv("SENTRY_TRACES_SAMPLE_RATE", "0.1")),
+        send_default_pii=False,
+    )
+
+# ─────────────────────────────────────────
 # APP SETUP
 # ─────────────────────────────────────────
 
