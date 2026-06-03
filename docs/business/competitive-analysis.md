@@ -80,3 +80,9 @@ Same story as Semrush — SEO-focused, expensive, complex. Not a direct competit
 - **ADA compliance reporting** — Accessibility lawsuits against SMBs are rising. None of the affordable tools position around legal risk.
 - **SSL expiry alerts** — A surprisingly common way sites go down. GTMetrix and Semrush don't check this.
 - **Consolidated score** — Lighthouse gives you 4 separate audits with no combined view. SATsec's overall score is the headline metric.
+
+---
+
+## See also
+
+- [live-monitoring-positioning.md](live-monitoring-positioning.md) — the continuous-monitoring wedge, sales pitch, buyer personas, and cost model that turn this analysis into revenue.
