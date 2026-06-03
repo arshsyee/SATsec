@@ -16,10 +16,10 @@ Goal: Make the product production-worthy before adding business features.
 
 - [ ] Wire AI summaries — implement `generate_ai_summary()` in `backend/main.py:142` using Anthropic SDK
 - [ ] Add boto3 to `backend/requirements.txt` (currently missing, causes startup crash)
-- [ ] Add rate limiting — per-IP throttle on `POST /audit` to prevent abuse
+- [x] Add rate limiting — per-IP throttle on `POST /audit` to prevent abuse
 - [ ] Set up AWS SES — verify sending domain, test OTP + alert emails end-to-end
 - [ ] UI polish — fix mobile responsiveness, improve loading/error states
-- [ ] Fix navigation stubs — `/features` page needs real content
+- [x] Fix navigation stubs — `/features` page needs real content
 
 **Deliverable:** Stable, self-contained product that runs cleanly in production.
 
@@ -32,7 +32,7 @@ Goal: Turn the free tool into a paid SaaS product.
 - [ ] Build `/pricing` page — Free / Pro / Business tier breakdown
 - [ ] Stripe integration — checkout session, webhook listener, subscription status
 - [ ] Add `plan` field to User model — gate features by tier
-- [ ] User onboarding — welcome email on signup, first-run tutorial modal
+- [x] User onboarding — welcome email on signup, first-run tutorial modal
 - [ ] Audit export — PDF/CSV download of results
 
 **Deliverable:** Users can sign up, enter credit card, and subscribe to a paid plan.

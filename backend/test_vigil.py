@@ -78,6 +78,9 @@ class TestAuditSeo:
           <meta name="description" content="A good meta description that is between fifty and one sixty chars long ok.">
           <link rel="canonical" href="https://example.com">
           <meta property="og:title" content="Test">
+          <meta property="og:description" content="Test description for social sharing">
+          <meta property="og:image" content="https://example.com/og.png">
+          <meta name="twitter:card" content="summary">
           <script type="application/ld+json">{"@type":"WebPage"}</script>
         </head><body>
           <h1>Main Heading</h1>

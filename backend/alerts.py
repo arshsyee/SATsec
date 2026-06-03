@@ -100,6 +100,33 @@ Vigil — Always watching. Always reporting."""
     _send(to_email, subject, body)
 
 
+def send_welcome_email(to_email: str, username: str):
+    """Sends a welcome email once a user's account is verified and active."""
+    subject = "Welcome to SATsec — your site is now under surveillance"
+    body = f"""Hi {username},
+
+Welcome to SATsec! Your account is verified and ready to go.
+
+Here's how to get the most out of it:
+
+  1. Run an audit — paste any URL to get Performance, SEO, Accessibility,
+     and Security scores in seconds.
+  2. Schedule monitoring — let SATsec re-audit your sites every 6 hours,
+     daily, or weekly, automatically.
+  3. Set alerts — get emailed the moment a score drops below your threshold,
+     with a plain-English explanation of what changed.
+  4. Track trends — the dashboard shows score history so you can pinpoint
+     exactly when a deploy broke your site.
+
+Run your first audit: {os.getenv("FRONTEND_URL", "https://satsec.app")}
+
+Always watching. Always reporting.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+The SATsec Team"""
+
+    _send(to_email, subject, body)
+
+
 def should_alert(scores: dict, threshold: float) -> bool:
     """Returns True if any individual score is below the threshold."""
     return any(

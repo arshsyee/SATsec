@@ -9,6 +9,9 @@ import { useAuth } from '../contexts/AuthContext'
 import { getGuestAudits } from '../utils/guestStorage'
 import Backdrop from '../components/Backdrop'
 import SiteChip from '../components/SiteChip'
+import WelcomeModal from '../components/WelcomeModal'
+
+const ONBOARDED_KEY = 'vigil_onboarded'
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -131,6 +134,19 @@ export default function Dashboard() {
   const [activeTab,    setActiveTab]    = useState('overview')
   const [loading,      setLoading]      = useState(true)
   const [error,        setError]        = useState(null)
+  const [showWelcome,  setShowWelcome]  = useState(false)
+
+  // First-run tutorial: show once per browser for logged-in users.
+  useEffect(() => {
+    if (isLoggedIn && !localStorage.getItem(ONBOARDED_KEY)) {
+      setShowWelcome(true)
+    }
+  }, [isLoggedIn])
+
+  const dismissWelcome = () => {
+    localStorage.setItem(ONBOARDED_KEY, '1')
+    setShowWelcome(false)
+  }
 
   const openSettings = () => {
     if (isLoggedIn) {
@@ -233,6 +249,7 @@ export default function Dashboard() {
     <div className="relative min-h-screen bg-void text-ink font-sans overflow-x-hidden">
 
       <Backdrop />
+      {showWelcome && <WelcomeModal username={user?.username} onClose={dismissWelcome} />}
 
       {/* Nav */}
       <nav className="relative z-20 flex items-center justify-between gap-4 px-6 md:px-12 py-4 border-b border-white/[0.06] backdrop-blur-sm">

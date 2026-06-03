@@ -9,12 +9,16 @@ import datetime
 import random
 from dotenv import load_dotenv
 
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+
 load_dotenv()
 
 from database import get_session, AuditResult, ScheduledAudit, User, PasswordResetToken, OtpCode
 from audit import run_audit, run_audit_staged
 import screenshot as screenshot_utils
-from alerts import send_alert, should_alert, send_reset_email, send_otp_email
+from alerts import send_alert, should_alert, send_reset_email, send_otp_email, send_welcome_email
 from scheduler import start_scheduler, add_scheduled_audit, remove_scheduled_audit, list_scheduled_jobs
 import auth as auth_utils
 
@@ -27,6 +31,49 @@ app = FastAPI(
     description="Website performance, SEO, accessibility, and security audits.",
     version="1.0.0"
 )
+
+
+# ─────────────────────────────────────────
+# RATE LIMITING
+# ─────────────────────────────────────────
+
+def get_user_or_ip(request: Request) -> str:
+    """
+    Rate-limit key: authenticated users are limited by user ID, everyone else
+    by source IP. Keying authed users separately means one logged-in user can't
+    exhaust the shared-IP guest budget (and vice versa).
+    """
+    auth_header = request.headers.get("Authorization", "")
+    if auth_header.startswith("Bearer "):
+        payload = auth_utils.decode_access_token(auth_header[7:])
+        if payload:
+            return f"user:{payload['sub']}"
+    return get_remote_address(request)
+
+
+def _audit_guest_key(request: Request) -> str:
+    """IP key for guests; empty string for authed users so slowapi skips this
+    (stricter) limit for them — they fall under the higher per-user limit instead."""
+    auth_header = request.headers.get("Authorization", "")
+    if auth_header.startswith("Bearer ") and auth_utils.decode_access_token(auth_header[7:]):
+        return ""  # skipped — see Limiter.__evaluate_limits `if all(args)`
+    return get_remote_address(request)
+
+
+def _audit_user_key(request: Request) -> str:
+    """Per-user key for authed callers; empty string for guests so slowapi skips
+    this (higher) limit for them — they fall under the stricter guest IP limit."""
+    auth_header = request.headers.get("Authorization", "")
+    if auth_header.startswith("Bearer "):
+        payload = auth_utils.decode_access_token(auth_header[7:])
+        if payload:
+            return f"user:{payload['sub']}"
+    return ""  # skipped for guests
+
+
+limiter = Limiter(key_func=get_user_or_ip)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
 
@@ -167,7 +214,8 @@ def _create_otp(session, user_id: int) -> str:
 
 
 @app.post("/auth/signup")
-def signup(body: SignupRequest):
+@limiter.limit("3/hour")
+def signup(request: Request, body: SignupRequest):
     username = body.username.strip()
     email    = body.email.strip().lower()
     password = body.password
@@ -244,7 +292,11 @@ def verify_otp(body: VerifyOtpRequest):
         session.commit()
 
         token = auth_utils.create_access_token(user.id, user.username)
-        return {"token": token, "user": {"id": user.id, "username": user.username, "email": user.email}}
+        user_payload = {"id": user.id, "username": user.username, "email": user.email}
+
+    # Account is now active — send the welcome/onboarding email (best-effort).
+    send_welcome_email(to_email=user_payload["email"], username=user_payload["username"])
+    return {"token": token, "user": user_payload}
 
 
 @app.post("/auth/resend-otp")
@@ -263,7 +315,8 @@ def resend_otp(body: ResendOtpRequest):
 
 
 @app.post("/auth/login")
-def login(body: LoginRequest):
+@limiter.limit("10/minute")
+def login(request: Request, body: LoginRequest):
     identifier = body.identifier.strip()
     password   = body.password
 
@@ -299,7 +352,8 @@ def me(identity: dict = Depends(require_auth)):
 
 
 @app.post("/auth/forgot-password")
-def forgot_password(body: ForgotPasswordRequest):
+@limiter.limit("3/hour")
+def forgot_password(request: Request, body: ForgotPasswordRequest):
     identifier = body.identifier.strip()
 
     with get_session() as session:
@@ -373,9 +427,14 @@ def root():
     return {"message": "Vigil is running", "version": "1.0.0"}
 
 
+# Audits are expensive (fetch + parse + SSL check). Guests: 5/min per IP.
+# Authed users: 30/min per user. Each limit's key_func returns "" for the other
+# audience, which slowapi treats as "skip this limit".
 @app.post("/audit")
-def trigger_audit(request: AuditRequest, identity: dict = Depends(get_identity)):
-    url = request.url.strip()
+@limiter.limit("5/minute", key_func=_audit_guest_key)
+@limiter.limit("30/minute", key_func=_audit_user_key)
+def trigger_audit(request: Request, body: AuditRequest, identity: dict = Depends(get_identity)):
+    url = body.url.strip()
     if not url.startswith("http"):
         url = "https://" + url
 
@@ -438,13 +497,15 @@ def _persist_audit(url: str, result: dict, user_id: int) -> int:
 
 
 @app.post("/audit/stream")
-def trigger_audit_stream(request: AuditRequest, identity: dict = Depends(get_identity)):
+@limiter.limit("5/minute", key_func=_audit_guest_key)
+@limiter.limit("30/minute", key_func=_audit_user_key)
+def trigger_audit_stream(request: Request, body: AuditRequest, identity: dict = Depends(get_identity)):
     """
     Streaming variant of /audit. Emits one Server-Sent Event per real audit
     stage, then a final 'result' event. The plain /audit endpoint is unchanged
-    and remains available as a fallback.
+    and remains available as a fallback. Shares /audit's rate limits.
     """
-    url = request.url.strip()
+    url = body.url.strip()
     if not url.startswith("http"):
         url = "https://" + url
 
@@ -471,10 +532,12 @@ def trigger_audit_stream(request: AuditRequest, identity: dict = Depends(get_ide
 
 
 @app.get("/screenshot")
-async def screenshot_endpoint(url: str):
+@limiter.limit("10/minute", key_func=get_user_or_ip)
+async def screenshot_endpoint(request: Request, url: str):
     """
     Render a headless-browser PNG of a public site for the in-app preview.
     Works where iframes don't (bypasses X-Frame-Options / CSP). SSRF-guarded.
+    Rate-limited — each call spawns a headless browser.
     """
     url = url.strip()
     if not url.startswith("http"):
