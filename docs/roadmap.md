@@ -34,6 +34,7 @@ Goal: Turn the free tool into a paid SaaS product.
 - [ ] Add `plan` field to User model — gate features by tier
 - [x] User onboarding — welcome email on signup, first-run tutorial modal
 - [ ] Audit export — PDF/CSV download of results
+- [ ] Loading-screen ads — monetize free tier; ad on loading screen after 1 free scan, ad-free for paid (see `feature-plans/loading-screen-ads.md`)
 
 **Deliverable:** Users can sign up, enter credit card, and subscribe to a paid plan.
 
@@ -44,6 +45,7 @@ Goal: Turn the free tool into a paid SaaS product.
 Goal: Add features that drive B2B adoption and reduce churn.
 
 - [ ] API keys — users generate tokens for programmatic `POST /audit` access
+- [ ] Data API & Data plan — sell aggregated audit corpus (batch/query/benchmark) to companies; usage-metered tier (see `feature-plans/data-api.md`)
 - [ ] Teams/workspaces — invite teammates, shared audit history
 - [ ] Webhooks — POST score-drop alerts to Slack or custom URL
 - [ ] `/docs` page — public API reference with example requests
