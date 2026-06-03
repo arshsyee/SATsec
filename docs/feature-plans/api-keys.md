@@ -6,6 +6,12 @@
 
 ---
 
+> **Not the same as the Data API.** This feature lets a company run **their own**
+> audits programmatically (send a URL → we scan it). Selling our **aggregated audit
+> corpus** to companies (batch/query/benchmark our existing data) is a separate
+> product — see `data-api.md`. The Data API builds on these keys but adds its own
+> usage-metered plan.
+
 ## Problem
 Developers want to trigger audits from CI/CD pipelines (e.g., after every deploy) without
 going through the browser UI. Without API keys, they'd have to use JWT tokens tied to a session.
