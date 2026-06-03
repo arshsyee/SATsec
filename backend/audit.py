@@ -416,8 +416,15 @@ def audit_performance(soup, html: str, load_time: float, response) -> dict:
         link for link in soup.find_all("link", rel="stylesheet")
         if "font" in (link.get("href") or "").lower()
     ]
+    # Weight by the real measured load_time: missing preload only matters if the
+    # page is actually slow. A fast page isn't penalised for a hint it doesn't need.
     if len(font_stylesheets) > 1 and not font_preloads:
-        f.add("No font preload hints found — web fonts may block rendering (LCP impact)", "moderate")
+        if load_time > 3:
+            f.add("No font preload hints — web fonts likely blocking render on this slow page (LCP impact)", "serious")
+        elif load_time > 1.5:
+            f.add("No font preload hints found — web fonts may block rendering (LCP impact)", "moderate")
+        else:
+            f.note("No font preload hints, but page already loads fast — low priority")
 
     # Lazy loading — below-the-fold images (after the first 3) should defer loading
     # Heuristic (we can't measure the real fold) → minor tier
@@ -426,8 +433,16 @@ def audit_performance(soup, html: str, load_time: float, response) -> dict:
         img for img in all_imgs[3:]
         if (img.get("loading") or "").lower() != "lazy"
     ]
+    # Escalate only when the page is genuinely slow (missing lazy-load is a
+    # plausible cause); on a fast page it's informational, not a penalty.
     if below_fold_no_lazy:
-        f.add(f"{len(below_fold_no_lazy)} below-the-fold image(s) missing loading='lazy'", "minor", count=len(below_fold_no_lazy))
+        n = len(below_fold_no_lazy)
+        if load_time > 3:
+            f.add(f"{n} below-the-fold image(s) missing loading='lazy' — likely slowing this page", "moderate", count=n)
+        elif load_time > 1.5:
+            f.add(f"{n} below-the-fold image(s) missing loading='lazy'", "minor", count=n)
+        else:
+            f.note(f"{n} below-the-fold image(s) missing loading='lazy' (page already fast — minor)")
 
     return f.result()
 

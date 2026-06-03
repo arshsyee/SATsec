@@ -64,6 +64,7 @@ class ScheduledAudit(Base):
     interval_hours  = Column(Integer, default=6)
     alert_email     = Column(String, nullable=True)
     alert_threshold = Column(Float, default=70.0)
+    webhook_url     = Column(String, nullable=True)
     is_active       = Column(Integer, default=1)
     created_at      = Column(DateTime, default=datetime.datetime.utcnow)
     last_run_at     = Column(DateTime, nullable=True)
@@ -80,6 +81,7 @@ def _migrate():
         "ALTER TABLE audit_results ADD COLUMN user_id INTEGER NULL",
         "ALTER TABLE audit_results ADD COLUMN session_id TEXT NULL",
         "ALTER TABLE scheduled_audits ADD COLUMN user_id INTEGER NULL",
+        "ALTER TABLE scheduled_audits ADD COLUMN webhook_url TEXT NULL",
         "ALTER TABLE users ADD COLUMN email_verified INTEGER DEFAULT 0",
     ]
     with engine.connect() as conn:

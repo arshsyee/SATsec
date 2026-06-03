@@ -18,9 +18,24 @@ load_dotenv()
 from database import get_session, AuditResult, ScheduledAudit, User, PasswordResetToken, OtpCode
 from audit import run_audit, run_audit_staged
 import screenshot as screenshot_utils
-from alerts import send_alert, should_alert, send_reset_email, send_otp_email, send_welcome_email
+from alerts import send_alert, send_webhook, should_alert, send_reset_email, send_otp_email, send_welcome_email
 from scheduler import start_scheduler, add_scheduled_audit, remove_scheduled_audit, list_scheduled_jobs
 import auth as auth_utils
+
+# ─────────────────────────────────────────
+# ERROR MONITORING (Sentry)
+# ─────────────────────────────────────────
+# Init before app creation so the FastAPI/Starlette integration wraps the app.
+# No-op when SENTRY_DSN is unset, so local/dev runs are unaffected.
+_SENTRY_DSN = os.getenv("SENTRY_DSN")
+if _SENTRY_DSN:
+    import sentry_sdk
+    sentry_sdk.init(
+        dsn=_SENTRY_DSN,
+        environment=os.getenv("SENTRY_ENVIRONMENT", "production"),
+        traces_sample_rate=float(os.getenv("SENTRY_TRACES_SAMPLE_RATE", "0.1")),
+        send_default_pii=False,
+    )
 
 # ─────────────────────────────────────────
 # APP SETUP
@@ -120,6 +135,7 @@ class ScheduleRequest(BaseModel):
     interval_hours: int = 6
     alert_email: Optional[str] = None
     alert_threshold: float = 70.0
+    webhook_url: Optional[str] = None
 
 class SignupRequest(BaseModel):
     username: str
@@ -188,7 +204,35 @@ def require_auth(identity: dict = Depends(get_identity)) -> dict:
 # ─────────────────────────────────────────
 
 def generate_ai_summary(url: str, scores: dict, issues: list) -> str:
-    return "AI summary coming soon."
+    """Plain-English audit summary via Claude (Haiku). Returns a graceful
+    fallback string when the key is unset, there are no issues, or the API
+    errors — never raises, so audits succeed regardless of AI availability."""
+    api_key = os.getenv("ANTHROPIC_API_KEY")
+    if not api_key or not issues:
+        return "AI summary unavailable."
+
+    issues_text = "\n".join(f"- {i}" for i in issues[:15])
+    prompt = (
+        f"Website audit for {url}:\n"
+        f"Scores — Performance: {scores.get('performance')}, SEO: {scores.get('seo')}, "
+        f"Accessibility: {scores.get('accessibility')}, Security: {scores.get('security')}\n\n"
+        f"Issues found:\n{issues_text}\n\n"
+        f"Write a 3-5 sentence plain-English summary for a non-technical website owner. "
+        f"Focus on the most critical issues and what to fix first. Be direct and actionable."
+    )
+
+    try:
+        import anthropic
+        client = anthropic.Anthropic(api_key=api_key)
+        message = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=300,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        return message.content[0].text
+    except Exception as e:
+        print(f"[Vigil] AI summary generation failed: {e}")
+        return "AI summary unavailable."
 
 
 # ─────────────────────────────────────────
@@ -703,6 +747,7 @@ def create_schedule(request: ScheduleRequest, identity: dict = Depends(require_a
             interval_hours=request.interval_hours,
             alert_email=request.alert_email,
             alert_threshold=request.alert_threshold,
+            webhook_url=request.webhook_url,
             user_id=identity["user_id"],
         )
         session.add(scheduled)
@@ -755,6 +800,7 @@ def list_schedules(identity: dict = Depends(require_auth)):
                 "interval_hours": s.interval_hours,
                 "alert_email": s.alert_email,
                 "alert_threshold": s.alert_threshold,
+                "webhook_url": s.webhook_url,
                 "created_at": s.created_at.isoformat(),
                 "last_run_at": s.last_run_at.isoformat() if s.last_run_at else None
             }
@@ -799,17 +845,30 @@ def run_scheduled_audit(url: str):
             schedule.last_run_at = datetime.datetime.utcnow()
 
         session.commit()
+        session.refresh(audit_record)
+        audit_id = audit_record.id
 
     with get_session() as session:
         schedule = session.query(ScheduledAudit).filter(ScheduledAudit.url == url).first()
-        if schedule and schedule.alert_email:
-            if should_alert(result["scores"], schedule.alert_threshold):
+        if schedule and should_alert(result["scores"], schedule.alert_threshold):
+            if schedule.alert_email:
                 send_alert(
                     to_email=schedule.alert_email,
                     url=url,
                     scores=result["scores"],
                     issues=result["issues_flat"]
                 )
+            if schedule.webhook_url:
+                app_base = os.getenv("VIGIL_APP_URL", "").rstrip("/")
+                send_webhook(schedule.webhook_url, {
+                    "event": "score_drop",
+                    "url": url,
+                    "timestamp": datetime.datetime.utcnow().isoformat() + "Z",
+                    "scores": result["scores"],
+                    "threshold": schedule.alert_threshold,
+                    "top_issues": result["issues_flat"][:5],
+                    "audit_url": f"{app_base}/results/{audit_id}" if app_base else None,
+                })
 
 
 # ─────────────────────────────────────────

@@ -1,5 +1,6 @@
 import boto3
 import os
+import requests
 from botocore.exceptions import ClientError
 
 FROM_EMAIL = os.getenv("VIGIL_FROM_EMAIL", "")
@@ -125,6 +126,15 @@ Always watching. Always reporting.
 The SATsec Team"""
 
     _send(to_email, subject, body)
+
+
+def send_webhook(webhook_url: str, payload: dict):
+    """POST a score-drop event to a user-configured webhook (Slack-compatible
+    JSON). Best-effort: never raises, so a bad URL can't break the scheduler."""
+    try:
+        requests.post(webhook_url, json=payload, timeout=10)
+    except Exception as e:
+        print(f"[Vigil] Webhook delivery failed: {e}")
 
 
 def should_alert(scores: dict, threshold: float) -> bool:

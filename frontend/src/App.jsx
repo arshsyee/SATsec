@@ -14,6 +14,8 @@ import Register       from './pages/Register'
 import VerifyOtp      from './pages/VerifyOtp'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword  from './pages/ResetPassword'
+import Privacy        from './pages/Privacy'
+import Terms          from './pages/Terms'
 import ImportAuditsModal from './components/ImportAuditsModal'
 import SignOutModal from './components/SignOutModal'
 import ThemeSwitcher from './components/ThemeSwitcher'
@@ -50,6 +52,8 @@ function App() {
           <Route path="/verify-otp"      element={<VerifyOtp />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password"  element={<ResetPassword />} />
+          <Route path="/privacy"         element={<Privacy />} />
+          <Route path="/terms"           element={<Terms />} />
           <Route path="*"                element={<NotFound />} />
         </Routes>
         <GlobalModals />
