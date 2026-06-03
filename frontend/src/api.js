@@ -95,11 +95,11 @@ export async function getRecentAudits(limit = 30) {
   return res.json()
 }
 
-export async function createSchedule({ url, interval_hours, alert_email, alert_threshold }) {
+export async function createSchedule({ url, interval_hours, alert_email, alert_threshold, webhook_url }) {
   const res = await fetch(`${BASE}/schedule`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...authHeaders() },
-    body: JSON.stringify({ url, interval_hours, alert_email, alert_threshold }),
+    body: JSON.stringify({ url, interval_hours, alert_email, alert_threshold, webhook_url }),
   })
   if (!res.ok) throw new Error('Failed to save schedule')
   return res.json()

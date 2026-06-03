@@ -7,9 +7,10 @@ Derived from `docs/feature-plans/` + `docs/roadmap.md`. Each item links its spec
 
 ## Phase 1 — Foundation
 
-- [ ] **AI audit summaries** (1-2d) — `generate_ai_summary()` in `backend/main.py:142`
-  returns hardcoded string. Wire Anthropic SDK (Haiku), cache on `AuditResult`,
-  gate to Pro/Business. Spec: `feature-plans/ai-summaries.md`.
+- [x] **AI audit summaries** — `generate_ai_summary()` now calls Claude Haiku
+  (`claude-haiku-4-5-20251001`) via Anthropic SDK, gated on `ANTHROPIC_API_KEY`,
+  graceful fallback when unset/no-issues/API-error. Already cached on `AuditResult`.
+  Tier-gating (Pro/Business only) still TODO — currently runs for all. Spec: `feature-plans/ai-summaries.md`.
 - [x] Add `boto3` to `backend/requirements.txt` (missing → startup crash). Also powers SES alerts + Bedrock AI summary.
 - [x] Rate limiting — per-IP throttle on `POST /audit`.
 - [ ] AWS SES — verify domain, test OTP + alert emails end-to-end.
@@ -46,9 +47,10 @@ Derived from `docs/feature-plans/` + `docs/roadmap.md`. Each item links its spec
 - [ ] **Data API & Data plan** (6-8d) — sell aggregated corpus. `/v1/data/batch|query|
   domain/{d}/history|benchmarks`, `api_usage` metering table, Stripe metered billing,
   `/pricing#data`. Depends on API keys + Celery + legal sign-off. Spec: `feature-plans/data-api.md`.
-- [ ] **Webhooks** (2d) — add `webhook_url` to `scheduled_audits`, `send_webhook()` in
-  `alerts.py`, trigger in `run_scheduled_audit()` on score drop. Slack-compatible
-  payload. Spec: `feature-plans/webhooks.md`.
+- [x] **Webhooks** — `webhook_url` column + migration, `send_webhook()` in `alerts.py`
+  (best-effort, never raises), fires alongside email on score drop with Slack-compatible
+  `score_drop` payload. Settings UI: optional webhook field. `audit_url` uses
+  `VIGIL_APP_URL` env if set. Spec: `feature-plans/webhooks.md`.
 - [ ] **Teams / workspaces** (5-7d) — `Workspace` + `WorkspaceMember` tables, invite
   flow, workspace switcher, scope audits/schedules by `workspace_id`. Business plan
   (5 members). Ship without roles first. Spec: `feature-plans/teams-workspaces.md`.

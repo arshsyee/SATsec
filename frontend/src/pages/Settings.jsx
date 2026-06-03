@@ -29,6 +29,7 @@ export default function Settings() {
   const [schedule, setSchedule]   = useState('6h')
   const [threshold, setThreshold] = useState(70)
   const [email, setEmail]         = useState('')
+  const [webhook, setWebhook]     = useState('')
   const [saved, setSaved]         = useState(false)
   const [saving, setSaving]       = useState(false)
   const [error, setError]         = useState(null)
@@ -62,6 +63,7 @@ export default function Settings() {
       setSchedule(keyFromHours(existing.interval_hours))
       setThreshold(existing.alert_threshold)
       setEmail(existing.alert_email || '')
+      setWebhook(existing.webhook_url || '')
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [existing?.id])
@@ -78,6 +80,7 @@ export default function Settings() {
         interval_hours:  SCHEDULE_HOURS[schedule],
         alert_email:     email || null,
         alert_threshold: threshold,
+        webhook_url:     webhook || null,
       })
       setSchedules(await listSchedules())
       setSaved(true)
@@ -263,6 +266,16 @@ export default function Settings() {
               className="w-full bg-elevated/70 border border-white/[0.08] rounded-xl px-4 py-3 text-sm text-ink-bright placeholder-ink-ghost outline-none focus:border-accent/50 transition-colors font-mono"
             />
             <p className="text-xs text-ink-faint font-mono mt-3">alerts will be sent to this address when scores drop</p>
+
+            <p className="eyebrow mt-6 mb-3">Webhook URL <span className="text-ink-ghost">(optional)</span></p>
+            <input
+              type="url"
+              value={webhook}
+              onChange={e => setWebhook(e.target.value)}
+              placeholder="https://hooks.slack.com/services/..."
+              className="w-full bg-elevated/70 border border-white/[0.08] rounded-xl px-4 py-3 text-sm text-ink-bright placeholder-ink-ghost outline-none focus:border-accent/50 transition-colors font-mono"
+            />
+            <p className="text-xs text-ink-faint font-mono mt-3">we POST a score-drop payload here — paste a Slack incoming webhook or your own endpoint</p>
           </div>
         ) : (
           <div className="rounded-2xl border border-accent/20 bg-accent/[0.06] p-6 mb-6 text-center">
