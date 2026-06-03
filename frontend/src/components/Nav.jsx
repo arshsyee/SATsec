@@ -11,7 +11,7 @@ function RadarMark({ className = '' }) {
       {/* sweeping arm */}
       <span
         className="absolute inset-0 rounded-full animate-radar"
-        style={{ background: 'conic-gradient(from 0deg, rgba(59,130,246,0.45), transparent 55%)' }}
+        style={{ background: 'conic-gradient(from 0deg, rgb(var(--c-accent) / 0.45), transparent 55%)' }}
       />
     </span>
   )
@@ -30,7 +30,7 @@ const LINKS = [
  */
 export default function Nav({ active }) {
   const navigate = useNavigate()
-  const { isLoggedIn, user, logout } = useAuth()
+  const { isLoggedIn, user, requestSignOut } = useAuth()
 
   return (
     <nav className="relative z-20 flex items-center justify-between gap-4 px-6 md:px-12 py-4 border-b border-white/[0.06] backdrop-blur-sm">
@@ -96,7 +96,7 @@ export default function Nav({ active }) {
           <>
             <span className="hidden md:block font-mono text-xs text-ink-dim">{user?.username}</span>
             <button onClick={() => navigate('/dashboard')} className="btn-accent">Dashboard</button>
-            <button onClick={logout} className="btn-ghost">Sign out</button>
+            <button onClick={requestSignOut} className="btn-ghost">Sign out</button>
           </>
         ) : (
           <button onClick={() => navigate('/login')} className="btn-accent">Sign in</button>

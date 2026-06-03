@@ -9,12 +9,36 @@
    CSS needs as variables here.
    ───────────────────────────────────────────────────────────── */
 
-:root {
-  --void:    #05080d;
-  --accent:  #3b82f6;
-  --live:    #2ce8a0;
-  --hair:    rgba(255, 255, 255, 0.07);
-  --grid:    rgba(120, 180, 230, 0.04);
+/* ── Theme palettes ──────────────────────────────────────────────
+   Each token is an RGB channel triplet consumed by tailwind tokens as
+   rgb(var(--c-x) / <alpha>). Switch themes by setting data-theme on <html>.
+   Default (no attribute) = Charcoal. */
+:root,
+:root[data-theme="charcoal"] {
+  --c-void: 15 16 18;        --c-surface: 22 24 28;     --c-elevated: 29 32 37;
+  --c-ink-bright: 244 245 247; --c-ink: 196 200 206;    --c-ink-dim: 136 142 152;
+  --c-ink-faint: 86 91 100;  --c-ink-ghost: 48 52 60;
+  --c-accent: 214 217 223;   --c-accent-bright: 255 255 255; --c-accent-dim: 154 160 168;
+  --c-live: 69 192 138;      --c-warn: 217 178 90;      --c-crit: 224 101 118;
+  --grid: rgba(255, 255, 255, 0.035);
+}
+
+:root[data-theme="violet"] {
+  --c-void: 5 8 13;          --c-surface: 10 15 23;     --c-elevated: 14 20 30;
+  --c-ink-bright: 233 241 248; --c-ink: 174 188 203;    --c-ink-dim: 111 132 151;
+  --c-ink-faint: 63 81 99;   --c-ink-ghost: 34 48 63;
+  --c-accent: 124 92 255;    --c-accent-bright: 154 130 255; --c-accent-dim: 104 64 230;
+  --c-live: 44 232 160;      --c-warn: 255 206 74;      --c-crit: 255 84 112;
+  --grid: rgba(124, 92, 255, 0.05);
+}
+
+:root[data-theme="blue"] {
+  --c-void: 5 8 13;          --c-surface: 10 15 23;     --c-elevated: 14 20 30;
+  --c-ink-bright: 233 241 248; --c-ink: 174 188 203;    --c-ink-dim: 111 132 151;
+  --c-ink-faint: 63 81 99;   --c-ink-ghost: 34 48 63;
+  --c-accent: 59 130 246;    --c-accent-bright: 96 165 250;  --c-accent-dim: 37 99 235;
+  --c-live: 44 232 160;      --c-warn: 255 206 74;      --c-crit: 255 84 112;
+  --grid: rgba(59, 130, 246, 0.05);
 }
 
 @layer base {
@@ -24,15 +48,15 @@
   }
   body {
     cursor: default;
-    background: var(--void);
-    color: #aebccb;
-    font-family: '"JetBrains Mono"', ui-monospace, monospace;
+    background: rgb(var(--c-void));
+    color: rgb(var(--c-ink));
+    font-family: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
   }
   input, textarea { cursor: text; }
 
   ::selection {
-    background: rgba(59, 130, 246, 0.30);
-    color: #dbeafe;
+    background: rgba(255, 255, 255, 0.18);
+    color: #f4f5f7;
   }
 
   /* Terminal scrollbar */
@@ -43,8 +67,8 @@
   ::-webkit-scrollbar { width: 10px; height: 10px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb {
-    background: #1b2837;
-    border: 2px solid var(--void);
+    background: rgb(var(--c-ink-ghost));
+    border: 2px solid rgb(var(--c-void));
     border-radius: 6px;
   }
   ::-webkit-scrollbar-thumb:hover { background: #28394d; }
@@ -76,7 +100,7 @@
   .bg-vignette {
     background: radial-gradient(
       120% 80% at 50% 0%,
-      rgba(59, 130, 246, 0.06) 0%,
+      rgba(255, 255, 255, 0.035) 0%,
       transparent 42%
     ),
     radial-gradient(
@@ -103,18 +127,51 @@
     @apply bg-surface/70 border border-white/[0.07] rounded-2xl backdrop-blur-sm;
   }
 
-  /* Primary (amber) button */
+  /* Primary CTA — flat light-gray outline, white text, no fill/glow */
   .btn-accent {
-    @apply inline-flex items-center justify-center gap-2 bg-accent hover:bg-accent-bright
-           text-white font-mono font-medium text-sm px-5 py-2.5 rounded-lg
-           transition-all duration-200 shadow-glow-accent hover:-translate-y-px;
+    @apply inline-flex items-center justify-center gap-2
+           bg-transparent hover:bg-white/[0.05]
+           border border-white/25 hover:border-white/45
+           text-ink-bright font-sans font-medium text-sm px-5 py-2.5 rounded-lg
+           transition-colors duration-150 ease-out
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 focus-visible:ring-offset-2 focus-visible:ring-offset-void
+           disabled:opacity-50 disabled:pointer-events-none;
   }
 
-  /* Ghost / secondary button */
+  /* Square icon button */
+  .btn-icon {
+    @apply inline-flex items-center justify-center
+           bg-transparent hover:bg-white/[0.05]
+           border border-white/10 hover:border-white/25
+           text-ink-dim hover:text-ink-bright
+           h-10 w-10 rounded-lg
+           transition-colors duration-150 ease-out
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 focus-visible:ring-offset-2 focus-visible:ring-offset-void
+           disabled:opacity-50 disabled:pointer-events-none;
+  }
+
+  /* Sign-out — quiet by default, leans danger on hover so it reads as exit */
+  .btn-signout {
+    @apply inline-flex items-center justify-center gap-2
+           bg-transparent hover:bg-crit/[0.08]
+           border border-white/10 hover:border-crit/40
+           text-ink-dim hover:text-crit
+           font-sans text-sm px-4 py-2.5 rounded-lg
+           transition-colors duration-150 ease-out
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-crit/40 focus-visible:ring-offset-2 focus-visible:ring-offset-void
+           disabled:opacity-50 disabled:pointer-events-none;
+  }
+
+  /* Ghost / secondary button — quieter than primary, hairline border */
   .btn-ghost {
-    @apply inline-flex items-center justify-center gap-2 border border-white/10
-           hover:border-accent/40 text-ink-dim hover:text-ink-bright
-           font-mono text-sm px-4 py-2.5 rounded-lg transition-all duration-200;
+    @apply inline-flex items-center justify-center gap-2
+           bg-transparent hover:bg-white/[0.04]
+           border border-white/10 hover:border-white/20
+           text-ink-dim hover:text-ink-bright
+           font-sans text-sm px-4 py-2.5 rounded-lg
+           transition-colors duration-150 ease-out
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 focus-visible:ring-offset-2 focus-visible:ring-offset-void
+           disabled:opacity-50 disabled:pointer-events-none;
   }
 }
 

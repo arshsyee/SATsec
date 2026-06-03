@@ -31,9 +31,9 @@ export function statusFor(v) {
   return { tone: 'crit', label: 'CRITICAL' }
 }
 const TONE = {
-  live: { text: 'text-live', bar: 'bg-live', glow: 'rgba(44,232,160,0.6)', blip: '#2ce8a0' },
-  warn: { text: 'text-warn', bar: 'bg-warn', glow: 'rgba(255,206,74,0.6)', blip: '#ffce4a' },
-  crit: { text: 'text-crit', bar: 'bg-crit', glow: 'rgba(255,84,112,0.6)', blip: '#ff5470' },
+  live: { text: 'text-live', bar: 'bg-live', glow: 'rgb(var(--c-live) / 0.5)', blip: 'rgb(var(--c-live))' },
+  warn: { text: 'text-warn', bar: 'bg-warn', glow: 'rgb(var(--c-warn) / 0.5)', blip: 'rgb(var(--c-warn))' },
+  crit: { text: 'text-crit', bar: 'bg-crit', glow: 'rgb(var(--c-crit) / 0.5)', blip: 'rgb(var(--c-crit))' },
 }
 
 /* Live-drifting demo scores (used when no real data). */
@@ -78,7 +78,7 @@ function RadarScope({ scores, size = 248 }) {
       <div className="absolute left-1/2 top-2 bottom-2 w-px -translate-x-1/2 bg-accent/10" />
       <div className="absolute top-1/2 left-2 right-2 h-px -translate-y-1/2 bg-accent/10" />
       <div className="absolute inset-0 rounded-full animate-radar"
-        style={{ background: 'conic-gradient(from 0deg, rgba(59,130,246,0.32), rgba(59,130,246,0.04) 40%, transparent 60%)' }}
+        style={{ background: 'conic-gradient(from 0deg, rgb(var(--c-accent) / 0.32), rgb(var(--c-accent) / 0.04) 40%, transparent 60%)' }}
       />
       <div className="absolute left-1/2 top-1/2 h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent shadow-glow-accent" />
       {scores.map(s => {

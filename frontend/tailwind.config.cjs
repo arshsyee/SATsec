@@ -6,37 +6,40 @@ module.exports = {
   ],
   theme: {
     extend: {
-      // ── Night-Vision Terminal palette ──────────────────────────
-      // Single source of truth. Never hand-type hex in components.
+      // ── Themeable palette ──────────────────────────────────────
+      // Tokens resolve to CSS variables (RGB channels) so the whole theme
+      // can be swapped at runtime via [data-theme] on <html>. Defined in
+      // index.css. Never hand-type hex in components — use these tokens.
       colors: {
-        void:     '#05080d',   // page base
-        surface:  '#0a0f17',   // cards / panels
-        elevated: '#0e141e',   // raised panels, inputs
+        void:     'rgb(var(--c-void) / <alpha-value>)',     // page base
+        surface:  'rgb(var(--c-surface) / <alpha-value>)',  // cards / panels
+        elevated: 'rgb(var(--c-elevated) / <alpha-value>)', // raised panels, inputs
         ink: {
-          bright: '#e9f1f8',   // headings
-          DEFAULT:'#aebccb',   // body
-          dim:    '#6f8497',   // muted / labels
-          faint:  '#3f5163',   // captions, footers
-          ghost:  '#22303f',   // hairline text, watermarks
+          bright: 'rgb(var(--c-ink-bright) / <alpha-value>)',
+          DEFAULT:'rgb(var(--c-ink) / <alpha-value>)',
+          dim:    'rgb(var(--c-ink-dim) / <alpha-value>)',
+          faint:  'rgb(var(--c-ink-faint) / <alpha-value>)',
+          ghost:  'rgb(var(--c-ink-ghost) / <alpha-value>)',
         },
-        accent: {              // signal blue — brand / interactive
-          DEFAULT:'#3b82f6',
-          bright: '#60a5fa',
-          dim:    '#2563eb',
+        accent: {
+          DEFAULT:'rgb(var(--c-accent) / <alpha-value>)',
+          bright: 'rgb(var(--c-accent-bright) / <alpha-value>)',
+          dim:    'rgb(var(--c-accent-dim) / <alpha-value>)',
         },
-        live: '#2ce8a0',       // phosphor green — "watching" / healthy
-        warn: '#ffce4a',       // at-risk
-        crit: '#ff5470',       // critical
+        live: 'rgb(var(--c-live) / <alpha-value>)',  // healthy
+        warn: 'rgb(var(--c-warn) / <alpha-value>)',  // at-risk
+        crit: 'rgb(var(--c-crit) / <alpha-value>)',  // critical
       },
       fontFamily: {
-        // Mono-forward terminal system. Display = characterful; mono = legible data.
-        display: ['"Space Mono"', 'ui-monospace', 'monospace'],
-        mono:    ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
-        sans:    ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
+        // Three-tier system: characterful display, neutral sans for reading,
+        // mono reserved for data (scores, URLs, labels, code).
+        display: ['"Space Grotesk"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        sans:    ['"IBM Plex Sans"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        mono:    ['"IBM Plex Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
       },
       boxShadow: {
-        'glow-accent': '0 0 0 1px rgba(59,130,246,0.30), 0 0 24px -4px rgba(59,130,246,0.45)',
-        'glow-live':   '0 0 16px -2px rgba(44,232,160,0.55)',
+        'glow-accent': '0 0 0 1px rgb(var(--c-accent) / 0.25)',
+        'glow-live':   '0 0 10px -3px rgb(var(--c-live) / 0.5)',
         'panel':       '0 1px 0 0 rgba(255,255,255,0.04) inset, 0 24px 60px -30px rgba(0,0,0,0.9)',
       },
       keyframes: {

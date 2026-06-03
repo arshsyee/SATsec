@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { createSchedule, listSchedules, deleteSchedule, getRecentAudits } from '../api'
 import { useAuth } from '../contexts/AuthContext'
 import Backdrop from '../components/Backdrop'
+import SiteChip from '../components/SiteChip'
 
 const SCHEDULE_HOURS = { '6h': 6, 'daily': 24, 'weekly': 168 }
 
@@ -110,12 +111,13 @@ export default function Settings() {
         <button onClick={() => navigate('/')} className="font-display text-lg font-bold tracking-tight text-ink-bright">
           SAT<span className="text-accent">sec</span>
         </button>
-        <div className="hidden sm:flex items-center gap-2 panel px-4 py-2 font-mono text-xs text-ink-dim max-w-[240px]">
-          <span className="w-2 h-2 rounded-full bg-live animate-pulse-live shrink-0" />
-          <span className="truncate">{selectedUrl || 'no site selected'}</span>
-        </div>
+        <SiteChip url={selectedUrl} />
         <div className="flex gap-3">
-          <button onClick={() => navigate('/dashboard', { state: { url: selectedUrl } })} className="btn-ghost">
+          <button onClick={() => navigate('/dashboard', { state: { url: selectedUrl } })} className="btn-accent">
+            <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <line x1="19" y1="12" x2="5" y2="12" />
+              <polyline points="12 19 5 12 12 5" />
+            </svg>
             Dashboard
           </button>
         </div>

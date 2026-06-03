@@ -1,6 +1,7 @@
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import Backdrop from '../components/Backdrop'
+import SiteChip from '../components/SiteChip'
 
 const scoreStyle = (score) => {
   if (score >= 80) return { color: 'text-live', ring: 'border-live/30 bg-live/10', tag: 'Healthy',  tagColor: 'bg-live/10 text-live' }
@@ -25,7 +26,7 @@ export default function AuditResults() {
   const navigate = useNavigate()
   const location = useLocation()
   const { isLoggedIn } = useAuth()
-  const { result, url } = location.state || {}
+  const { result, url, duration } = location.state || {}
 
   // Guard — if landed here directly with no data, send back home
   if (!result) {
@@ -58,10 +59,7 @@ export default function AuditResults() {
       {/* Nav */}
       <nav className="relative z-20 flex items-center justify-between gap-4 px-6 md:px-12 py-4 border-b border-white/[0.06] backdrop-blur-sm">
         <button onClick={() => navigate('/')} className="font-display text-lg font-bold tracking-tight text-ink-bright">SAT<span className="text-accent">sec</span></button>
-        <div className="hidden sm:flex items-center gap-2 panel px-4 py-2 font-mono text-xs text-ink-dim max-w-[240px]">
-          <span className="w-2 h-2 rounded-full bg-live animate-pulse-live shrink-0" />
-          <span className="truncate">{displayUrl}</span>
-        </div>
+        <SiteChip url={displayUrl} />
         <div className="flex gap-3">
           <button onClick={() => navigate('/')} className="btn-ghost">
             ← New Audit
@@ -80,7 +78,11 @@ export default function AuditResults() {
         {/* Header */}
         <div className="mb-8">
           <h2 className="font-display text-xl font-bold text-ink-bright mb-1 break-all">Audit Results — {displayUrl}</h2>
-          <p className="text-sm text-ink-faint font-mono">overall score: {scores.overall} · {issueEntries.reduce((n, [, v]) => n + v.length, 0)} issues found</p>
+          <p className="text-sm text-ink-dim font-mono">
+            overall score: <span className="text-ink-bright font-medium">{scores.overall}</span>
+            {' · '}<span className="text-ink-bright font-medium">{issueEntries.reduce((n, [, v]) => n + v.length, 0)}</span> issues found
+            {typeof duration === 'number' && <> · scanned in <span className="text-ink-bright font-medium">{duration.toFixed(1)}s</span></>}
+          </p>
         </div>
 
         {/* Score Cards */}

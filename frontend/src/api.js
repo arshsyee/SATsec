@@ -24,6 +24,54 @@ export async function runAudit(url, signal) {
   return res.json()
 }
 
+// Streaming audit — emits one event per real backend stage via Server-Sent Events.
+// onEvent receives: {type:'init',stages}, {type:'stage',id,status}, {type:'result',result}.
+// Returns the final result. Falls back caller-side to runAudit() if unsupported.
+export async function runAuditStream(url, { onEvent, signal } = {}) {
+  const res = await fetch(`${BASE}/audit/stream`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    body: JSON.stringify({ url }),
+    signal,
+  })
+  if (!res.ok || !res.body) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }))
+    throw new Error(err.detail || 'Audit failed')
+  }
+
+  const reader  = res.body.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+  let result = null
+
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    buffer += decoder.decode(value, { stream: true })
+
+    // SSE frames are separated by a blank line; keep the trailing partial.
+    const frames = buffer.split('\n\n')
+    buffer = frames.pop()
+    for (const frame of frames) {
+      const dataLine = frame.split('\n').find(l => l.startsWith('data:'))
+      if (!dataLine) continue
+      const event = JSON.parse(dataLine.slice(5).trim())
+      if (event.type === 'error') throw new Error(event.message)
+      if (event.type === 'result') result = event.result
+      onEvent?.(event)
+    }
+  }
+
+  if (!result) throw new Error('Audit ended without a result')
+  return result
+}
+
+// Server-rendered screenshot URL for the in-app preview — works where iframes
+// don't (bypasses X-Frame-Options / CSP). Safe to use directly as an <img src>.
+export function screenshotUrl(url) {
+  return `${BASE}/screenshot?url=${encodeURIComponent(url)}`
+}
+
 export async function getHistory(url, limit = 20) {
   const res = await fetch(
     `${BASE}/history?url=${encodeURIComponent(url)}&limit=${limit}`,

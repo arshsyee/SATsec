@@ -15,15 +15,21 @@ import VerifyOtp      from './pages/VerifyOtp'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword  from './pages/ResetPassword'
 import ImportAuditsModal from './components/ImportAuditsModal'
+import SignOutModal from './components/SignOutModal'
+import ThemeSwitcher from './components/ThemeSwitcher'
 
 function GlobalModals() {
   const { showImportModal, pendingImportAudits, dismissImportModal } = useAuth()
-  if (!showImportModal || pendingImportAudits.length === 0) return null
   return (
-    <ImportAuditsModal
-      audits={pendingImportAudits}
-      onDone={dismissImportModal}
-    />
+    <>
+      <SignOutModal />
+      {showImportModal && pendingImportAudits.length > 0 && (
+        <ImportAuditsModal
+          audits={pendingImportAudits}
+          onDone={dismissImportModal}
+        />
+      )}
+    </>
   )
 }
 
@@ -47,6 +53,7 @@ function App() {
           <Route path="*"                element={<NotFound />} />
         </Routes>
         <GlobalModals />
+        <ThemeSwitcher />
       </BrowserRouter>
     </AuthProvider>
   )

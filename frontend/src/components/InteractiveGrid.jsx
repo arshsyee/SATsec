@@ -80,11 +80,11 @@ export default function InteractiveGrid() {
             const down = nodeAt(i * GAP, (j + 1) * GAP)
             ctx.lineWidth = 1
             if (right) {
-              ctx.strokeStyle = `rgba(59,130,246,${Math.min(a.glow, right.glow) * 0.35})`
+              ctx.strokeStyle = `rgba(255,255,255,${Math.min(a.glow, right.glow) * 0.35})`
               ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(right.x, right.y); ctx.stroke()
             }
             if (down) {
-              ctx.strokeStyle = `rgba(59,130,246,${Math.min(a.glow, down.glow) * 0.35})`
+              ctx.strokeStyle = `rgba(255,255,255,${Math.min(a.glow, down.glow) * 0.35})`
               ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(down.x, down.y); ctx.stroke()
             }
           }
@@ -97,9 +97,9 @@ export default function InteractiveGrid() {
             if (!n || n.glow < 0.04) continue
             ctx.beginPath()
             ctx.arc(n.x, n.y, 1 + n.glow * 2.2, 0, Math.PI * 2)
-            ctx.fillStyle = `rgba(96,165,250,${0.15 + n.glow * 0.7})`
+            ctx.fillStyle = `rgba(255,255,255,${0.15 + n.glow * 0.7})`
             ctx.shadowBlur = n.glow * 10
-            ctx.shadowColor = 'rgba(59,130,246,0.8)'
+            ctx.shadowColor = 'rgba(255,255,255,0.8)'
             ctx.fill()
           }
         }

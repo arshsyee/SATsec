@@ -8,6 +8,7 @@ import { getRecentAudits, getHistory } from '../api'
 import { useAuth } from '../contexts/AuthContext'
 import { getGuestAudits } from '../utils/guestStorage'
 import Backdrop from '../components/Backdrop'
+import SiteChip from '../components/SiteChip'
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -59,9 +60,9 @@ const CustomTooltip = ({ active, payload, label }) => {
 
 // Status band for a 0-100 score.
 function statusTone(v) {
-  if (v >= 80) return { label: 'Healthy',  text: 'text-live', stroke: '#2ce8a0', wrap: 'border-live/30' }
-  if (v >= 60) return { label: 'At Risk',  text: 'text-warn', stroke: '#ffce4a', wrap: 'border-warn/30' }
-  return            { label: 'Critical', text: 'text-crit', stroke: '#ff5470', wrap: 'border-crit/30' }
+  if (v >= 80) return { label: 'Healthy',  text: 'text-live', stroke: '#45c08a', wrap: 'border-live/30' }
+  if (v >= 60) return { label: 'At Risk',  text: 'text-warn', stroke: '#d9b25a', wrap: 'border-warn/30' }
+  return            { label: 'Critical', text: 'text-crit', stroke: '#e06576', wrap: 'border-crit/30' }
 }
 
 // Circular gauge for the headline overall score.
@@ -121,7 +122,7 @@ function Stat({ label, value }) {
 export default function Dashboard() {
   const navigate  = useNavigate()
   const location  = useLocation()
-  const { isLoggedIn, user, logout } = useAuth()
+  const { isLoggedIn, user, requestSignOut } = useAuth()
 
   const [recentAudits, setRecentAudits] = useState([])
   const [history,      setHistory]      = useState([])
@@ -144,6 +145,15 @@ export default function Dashboard() {
 
   // ── Fetch all recent audits on mount ──────────────────────────────────────
   useEffect(() => {
+    // Resolve the incoming url (which may lack a protocol, e.g. from Results /
+    // Settings) to a record's canonical url so filtering + history match.
+    const strip = u => (u || '').replace(/^https?:\/\//, '')
+    const resolveSelected = (records) => {
+      if (records.length === 0) return
+      const match = records.find(r => strip(r.url) === strip(selectedUrl))
+      setSelectedUrl(match ? match.url : records[0].url)
+    }
+
     if (!isLoggedIn) {
       // Guests: read from localStorage
       const guestAudits = getGuestAudits().map(a => ({
@@ -154,14 +164,14 @@ export default function Dashboard() {
         created_at: a.created_at,
       }))
       setRecentAudits(guestAudits)
-      if (!selectedUrl && guestAudits.length > 0) setSelectedUrl(guestAudits[0].url)
+      resolveSelected(guestAudits)
       setLoading(false)
       return
     }
     getRecentAudits(30)
       .then(records => {
         setRecentAudits(records)
-        if (!selectedUrl && records.length > 0) setSelectedUrl(records[0].url)
+        resolveSelected(records)
       })
       .catch(err => setError(err.message))
       .finally(() => setLoading(false))
@@ -229,17 +239,22 @@ export default function Dashboard() {
         <button onClick={() => navigate('/')} className="font-display text-lg font-bold tracking-tight text-ink-bright">
           SAT<span className="text-accent">sec</span>
         </button>
-        <div className="hidden sm:flex items-center gap-2 panel px-4 py-2 font-mono text-xs text-ink-dim max-w-[240px]">
-          <span className="w-2 h-2 rounded-full bg-live animate-pulse-live shrink-0" />
-          <span className="truncate">{selectedUrl || 'no site selected'}</span>
-        </div>
+        <SiteChip url={selectedUrl} />
         <div className="flex gap-3">
-          <button onClick={openSettings} className="btn-ghost">
-            Settings
+          <button onClick={openSettings} className="btn-icon" title="Settings" aria-label="Settings">
+            <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="3" />
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+            </svg>
           </button>
           {isLoggedIn ? (
-            <button onClick={logout} className="btn-ghost">
-              Sign out ({user.username})
+            <button onClick={requestSignOut} className="btn-signout" title={`Sign out ${user.username}`}>
+              <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
+              Sign out
             </button>
           ) : (
             <button onClick={() => navigate('/login')} className="btn-ghost">

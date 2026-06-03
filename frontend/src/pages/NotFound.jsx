@@ -9,7 +9,7 @@ export default function NotFound() {
       {/* Grid bg */}
       <div className="fixed inset-0 z-0 pointer-events-none"
         style={{
-          backgroundImage: 'linear-gradient(rgba(99,179,237,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(99,179,237,0.03) 1px, transparent 1px)',
+          backgroundImage: 'linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)',
           backgroundSize: '48px 48px'
         }}
       />
@@ -18,7 +18,7 @@ export default function NotFound() {
 
         {/* Logo */}
         <div className="font-mono text-lg font-bold mb-16 cursor-pointer" onClick={() => navigate('/')}>
-          SAT<span className="text-blue-500">sec</span>
+          SAT<span className="text-accent">sec</span>
         </div>
 
         {/* 404 */}
@@ -37,7 +37,7 @@ export default function NotFound() {
           </button>
           <button
             onClick={() => navigate('/')}
-            className="bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium px-5 py-2.5 rounded-lg transition-colors"
+            className="bg-accent hover:bg-accent-dim text-white text-sm font-medium px-5 py-2.5 rounded-lg transition-colors"
           >
             Back to Home
           </button>

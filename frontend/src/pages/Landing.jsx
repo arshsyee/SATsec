@@ -72,7 +72,7 @@ export default function Landing() {
             style={{ animationDelay: '0.12s' }}>
           Your website,
           <br />
-          <span className="text-accent" style={{ textShadow: '0 0 28px rgba(59,130,246,0.5)' }}>
+          <span className="text-accent" style={{ textShadow: '0 0 28px rgb(var(--c-accent) / 0.5)' }}>
             audited end to end.
           </span>
         </h1>
