@@ -1,6 +1,6 @@
-from fastapi import FastAPI, HTTPException, Request, Depends
+from fastapi import FastAPI, HTTPException, Request, Depends, Response
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel
 from typing import Optional, List
 import json
@@ -16,7 +16,8 @@ from slowapi.errors import RateLimitExceeded
 load_dotenv()
 
 from database import get_session, AuditResult, ScheduledAudit, User, PasswordResetToken, OtpCode
-from audit import run_audit
+from audit import run_audit, run_audit_staged
+import screenshot as screenshot_utils
 from alerts import send_alert, should_alert, send_reset_email, send_otp_email, send_welcome_email
 from scheduler import start_scheduler, add_scheduled_audit, remove_scheduled_audit, list_scheduled_jobs
 import auth as auth_utils
@@ -26,8 +27,8 @@ import auth as auth_utils
 # ─────────────────────────────────────────
 
 app = FastAPI(
-    title="Vigil",
-    description="Always watching. Always reporting.",
+    title="SATsec",
+    description="Website performance, SEO, accessibility, and security audits.",
     version="1.0.0"
 )
 
@@ -258,10 +259,14 @@ def signup(request: Request, body: SignupRequest):
         session.commit()
         session.refresh(user)
 
-        code = _create_otp(session, user.id)
+        # Capture id before _create_otp's commit re-expires the instance and
+        # the session closes — otherwise user.id below raises DetachedInstanceError.
+        user_id = user.id
+
+        code = _create_otp(session, user_id)
 
     send_otp_email(to_email=email, username=username, otp_code=code)
-    return {"user_id": user.id, "email": email, "message": "Verification code sent to your email"}
+    return {"user_id": user_id, "email": email, "message": "Verification code sent to your email"}
 
 
 @app.post("/auth/verify-otp")
@@ -463,6 +468,95 @@ def trigger_audit(request: Request, body: AuditRequest, identity: dict = Depends
         result["id"] = None
 
     return result
+
+
+def _sse(obj: dict) -> str:
+    """Serialize an event as a Server-Sent Events frame."""
+    return f"data: {json.dumps(obj)}\n\n"
+
+
+def _persist_audit(url: str, result: dict, user_id: int) -> int:
+    """Persist a finished audit for an authenticated user; returns the new row id."""
+    with get_session() as session:
+        record = AuditResult(
+            url=url,
+            performance_score=result["scores"]["performance"],
+            seo_score=result["scores"]["seo"],
+            accessibility_score=result["scores"]["accessibility"],
+            security_score=result["scores"]["security"],
+            overall_score=result["scores"]["overall"],
+            issues=json.dumps(result["issues_flat"]),
+            ai_summary=result["ai_summary"],
+            user_id=user_id,
+            session_id=None,
+        )
+        session.add(record)
+        session.commit()
+        session.refresh(record)
+        return record.id
+
+
+@app.post("/audit/stream")
+@limiter.limit("5/minute", key_func=_audit_guest_key)
+@limiter.limit("30/minute", key_func=_audit_user_key)
+def trigger_audit_stream(request: Request, body: AuditRequest, identity: dict = Depends(get_identity)):
+    """
+    Streaming variant of /audit. Emits one Server-Sent Event per real audit
+    stage, then a final 'result' event. The plain /audit endpoint is unchanged
+    and remains available as a fallback. Shares /audit's rate limits.
+    """
+    url = body.url.strip()
+    if not url.startswith("http"):
+        url = "https://" + url
+
+    def event_stream():
+        try:
+            for event in run_audit_staged(url):
+                if event["type"] == "result":
+                    result = event["result"]
+                    result["ai_summary"] = generate_ai_summary(url, result["scores"], result["issues_flat"])
+                    # Only persist for authenticated users — guests store in browser
+                    result["id"] = _persist_audit(url, result, identity["user_id"]) if identity["user_id"] else None
+                    yield _sse({"type": "result", "result": result})
+                else:
+                    yield _sse(event)
+        except Exception as e:
+            print(f"[Vigil] Stream audit error on {url}: {type(e).__name__}: {e}")
+            yield _sse({"type": "error", "message": "Internal server error during audit"})
+
+    return StreamingResponse(
+        event_stream(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
+
+
+@app.get("/screenshot")
+@limiter.limit("10/minute", key_func=get_user_or_ip)
+async def screenshot_endpoint(request: Request, url: str):
+    """
+    Render a headless-browser PNG of a public site for the in-app preview.
+    Works where iframes don't (bypasses X-Frame-Options / CSP). SSRF-guarded.
+    Rate-limited — each call spawns a headless browser.
+    """
+    url = url.strip()
+    if not url.startswith("http"):
+        url = "https://" + url
+
+    if not screenshot_utils.is_safe_url(url):
+        raise HTTPException(status_code=400, detail="URL is not allowed")
+
+    try:
+        png = await screenshot_utils.capture(url)
+    except Exception as e:
+        print(f"[Vigil] Screenshot failed for {url}: {type(e).__name__}: {e}")
+        raise HTTPException(status_code=502, detail="Could not capture screenshot")
+
+    return Response(
+        content=png,
+        media_type="image/png",
+        headers={"Cache-Control": "public, max-age=300"},
+    )
 
 
 @app.post("/audit/import")

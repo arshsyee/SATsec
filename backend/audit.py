@@ -176,6 +176,14 @@ def run_audit(url: str) -> dict:
     accessibility = audit_accessibility(soup)
     security = audit_security(url, response)
 
+    result = _assemble_result(url, performance, seo, accessibility, security)
+    print(f"[Vigil] Audit complete for {url} — Overall: {result['scores']['overall']} ({result['grade']})")
+    return result
+
+
+def _assemble_result(url, performance, seo, accessibility, security) -> dict:
+    """Combine the four category audits into the final scored result.
+    Shared by run_audit and run_audit_staged so both produce identical output."""
     categories = {
         "performance": performance,
         "seo": seo,
@@ -204,7 +212,7 @@ def run_audit(url: str) -> dict:
     for cat in categories.values():
         tier_counts.update(t for t in cat.get("tiers", []) if t != "info")
 
-    result = {
+    return {
         "url": url,
         "scores": {
             "performance": performance["score"],
@@ -240,8 +248,73 @@ def run_audit(url: str) -> dict:
         "error": None
     }
 
-    print(f"[Vigil] Audit complete for {url} — Overall: {overall} ({result['grade']})")
-    return result
+
+# -----------------------------------------
+# STAGED AUDIT (generator for streaming progress)
+# -----------------------------------------
+# Ordered stages exposed to the client. Single source of truth for labels so
+# the loading UI shows exactly what the backend is really doing.
+AUDIT_STAGES = [
+    {"id": "fetch",         "label": "Fetching page"},
+    {"id": "performance",   "label": "Auditing performance"},
+    {"id": "seo",           "label": "Analyzing SEO & links"},
+    {"id": "accessibility", "label": "Scanning accessibility (WCAG)"},
+    {"id": "security",      "label": "Inspecting security & SSL"},
+    {"id": "compile",       "label": "Compiling report"},
+]
+
+
+def run_audit_staged(url: str):
+    """
+    Generator version of run_audit. Yields progress events as each real stage
+    runs, then the final result. Reuses the same stage functions as run_audit,
+    so scores are identical — only the progress reporting is added.
+
+    Event shapes:
+      {"type": "init",   "url": str, "stages": [...]}
+      {"type": "stage",  "id": str, "status": "running" | "done"}
+      {"type": "result", "result": {...}}
+      {"type": "error",  "message": str}
+    """
+    print(f"[Vigil] Starting staged audit for {url}")
+    yield {"type": "init", "url": url, "stages": AUDIT_STAGES}
+
+    # ── fetch ──
+    yield {"type": "stage", "id": "fetch", "status": "running"}
+    page = fetch_page(url)
+    if page is None:
+        yield {"type": "error", "message": "Could not fetch the page. Check the URL and try again."}
+        return
+    soup = BeautifulSoup(page["html"], "html.parser")
+    yield {"type": "stage", "id": "fetch", "status": "done"}
+
+    # ── performance ──
+    yield {"type": "stage", "id": "performance", "status": "running"}
+    performance = audit_performance(soup, page["html"], page["load_time"], page["response"])
+    yield {"type": "stage", "id": "performance", "status": "done"}
+
+    # ── seo ──
+    yield {"type": "stage", "id": "seo", "status": "running"}
+    seo = audit_seo(soup, url)
+    yield {"type": "stage", "id": "seo", "status": "done"}
+
+    # ── accessibility ──
+    yield {"type": "stage", "id": "accessibility", "status": "running"}
+    accessibility = audit_accessibility(soup)
+    yield {"type": "stage", "id": "accessibility", "status": "done"}
+
+    # ── security ──
+    yield {"type": "stage", "id": "security", "status": "running"}
+    security = audit_security(url, page["response"])
+    yield {"type": "stage", "id": "security", "status": "done"}
+
+    # ── compile ──
+    yield {"type": "stage", "id": "compile", "status": "running"}
+    result = _assemble_result(url, performance, seo, accessibility, security)
+    yield {"type": "stage", "id": "compile", "status": "done"}
+
+    print(f"[Vigil] Staged audit complete for {url} — Overall: {result['scores']['overall']} ({result['grade']})")
+    yield {"type": "result", "result": result}
 
 
 # --------------------------------------------

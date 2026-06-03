@@ -80,20 +80,20 @@ export default function VerifyOtp() {
     <div className="min-h-screen bg-[#080c14] text-[#e8edf5] font-sans flex flex-col items-center justify-center px-6">
       <div className="fixed inset-0 z-0 pointer-events-none"
         style={{
-          backgroundImage: 'linear-gradient(rgba(99,179,237,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(99,179,237,0.03) 1px, transparent 1px)',
+          backgroundImage: 'linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)',
           backgroundSize: '48px 48px'
         }}
       />
 
       <div className="relative z-10 w-full max-w-sm">
         <div className="font-mono text-xl font-bold text-center mb-10 cursor-pointer" onClick={() => navigate('/')}>
-          SAT<span className="text-blue-500">sec</span>
+          SAT<span className="text-accent">sec</span>
         </div>
 
         <div className="bg-white/[0.025] border border-white/[0.07] rounded-2xl p-8">
           <h2 className="text-lg font-medium text-[#f0f4fa] mb-1">Verify your email</h2>
-          <p className="text-xs text-[#4a6070] font-mono mb-1">// code sent to</p>
-          <p className="text-sm text-blue-400 font-mono mb-6">{email}</p>
+          <p className="text-xs text-[#4a6070] font-mono mb-1">code sent to</p>
+          <p className="text-sm text-accent-bright font-mono mb-6">{email}</p>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
@@ -110,7 +110,7 @@ export default function VerifyOtp() {
                     onChange={e => handleDigit(i, e.target.value)}
                     onKeyDown={e => handleKeyDown(i, e)}
                     autoFocus={i === 0}
-                    className="w-11 h-12 text-center bg-white/[0.04] border border-white/[0.08] rounded-xl text-lg font-mono text-[#e8edf5] outline-none focus:border-blue-500/50 transition-colors"
+                    className="w-11 h-12 text-center bg-white/[0.04] border border-white/[0.08] rounded-xl text-lg font-mono text-[#e8edf5] outline-none focus:border-accent/50 transition-colors"
                   />
                 ))}
               </div>
@@ -131,7 +131,7 @@ export default function VerifyOtp() {
             <button
               type="submit"
               disabled={loading || code.length < 6}
-              className="w-full bg-blue-500 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium py-3 rounded-xl transition-colors"
+              className="w-full bg-accent hover:bg-accent-dim disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium py-3 rounded-xl transition-colors"
             >
               {loading ? 'Verifying...' : 'Verify & Sign In'}
             </button>
@@ -142,7 +142,7 @@ export default function VerifyOtp() {
           <button
             onClick={handleResend}
             disabled={resending}
-            className="text-xs text-[#4a6070] hover:text-blue-400 font-mono transition-colors disabled:opacity-50"
+            className="text-xs text-[#4a6070] hover:text-accent-bright font-mono transition-colors disabled:opacity-50"
           >
             {resending ? 'Sending...' : "Didn't receive it? Resend code"}
           </button>

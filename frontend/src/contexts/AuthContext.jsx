@@ -12,6 +12,7 @@ export function AuthProvider({ children }) {
   const [ready,             setReady]             = useState(false)
   const [showImportModal,   setShowImportModal]   = useState(false)
   const [pendingImportAudits, setPendingImportAudits] = useState([])
+  const [signOutOpen,       setSignOutOpen]       = useState(false)
 
   // Ensure session ID exists immediately on mount
   getOrCreateSessionId()
@@ -58,6 +59,15 @@ export function AuthProvider({ children }) {
     setUser(null)
   }
 
+  // Opens the global sign-out confirmation modal (rendered once in App).
+  function requestSignOut() {
+    setSignOutOpen(true)
+  }
+
+  function cancelSignOut() {
+    setSignOutOpen(false)
+  }
+
   function dismissImportModal() {
     setShowImportModal(false)
     setPendingImportAudits([])
@@ -70,6 +80,9 @@ export function AuthProvider({ children }) {
       sessionId: getOrCreateSessionId(),
       login,
       logout,
+      signOutOpen,
+      requestSignOut,
+      cancelSignOut,
       isLoggedIn: !!user,
       ready,
       showImportModal,

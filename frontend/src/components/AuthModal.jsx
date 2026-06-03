@@ -146,7 +146,7 @@ export default function AuthModal({ onClose, onSuccess, defaultTab = 'login' }) 
               <button
                 onClick={() => switchTab('login')}
                 className={`text-xs px-4 py-1.5 rounded-lg font-mono transition-all ${
-                  tab === 'login' ? 'bg-blue-500 text-white' : 'text-[#4a6070] hover:text-[#8899aa]'
+                  tab === 'login' ? 'bg-accent text-white' : 'text-[#4a6070] hover:text-[#8899aa]'
                 }`}
               >
                 Sign in
@@ -154,7 +154,7 @@ export default function AuthModal({ onClose, onSuccess, defaultTab = 'login' }) 
               <button
                 onClick={() => switchTab('signup')}
                 className={`text-xs px-4 py-1.5 rounded-lg font-mono transition-all ${
-                  tab === 'signup' ? 'bg-blue-500 text-white' : 'text-[#4a6070] hover:text-[#8899aa]'
+                  tab === 'signup' ? 'bg-accent text-white' : 'text-[#4a6070] hover:text-[#8899aa]'
                 }`}
               >
                 Sign up
@@ -162,7 +162,7 @@ export default function AuthModal({ onClose, onSuccess, defaultTab = 'login' }) 
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
+              <span className="w-2 h-2 rounded-full bg-accent-bright animate-pulse" />
               <span className="text-sm font-medium text-[#e8edf5]">Verify your email</span>
             </div>
           )}
@@ -178,8 +178,8 @@ export default function AuthModal({ onClose, onSuccess, defaultTab = 'login' }) 
         {otpStep && (
           <form onSubmit={handleVerifyOtp} className="space-y-5">
             <div>
-              <p className="text-xs text-[#4a6070] font-mono mb-1">// code sent to</p>
-              <p className="text-sm text-blue-400 font-mono mb-4">{otpStep.email}</p>
+              <p className="text-xs text-[#4a6070] font-mono mb-1">code sent to</p>
+              <p className="text-sm text-accent-bright font-mono mb-4">{otpStep.email}</p>
               <label className="text-xs text-[#7a9ab8] font-mono block mb-3">6-digit verification code</label>
               <div className="flex gap-2 justify-between" onPaste={handleOtpPaste}>
                 {otpDigits.map((d, i) => (
@@ -193,7 +193,7 @@ export default function AuthModal({ onClose, onSuccess, defaultTab = 'login' }) 
                     onChange={e => handleOtpDigit(i, e.target.value)}
                     onKeyDown={e => handleOtpKeyDown(i, e)}
                     autoFocus={i === 0}
-                    className="w-10 h-11 text-center bg-white/[0.04] border border-white/[0.08] rounded-xl text-lg font-mono text-[#e8edf5] outline-none focus:border-blue-500/50 transition-colors"
+                    className="w-10 h-11 text-center bg-white/[0.04] border border-white/[0.08] rounded-xl text-lg font-mono text-[#e8edf5] outline-none focus:border-accent/50 transition-colors"
                   />
                 ))}
               </div>
@@ -214,7 +214,7 @@ export default function AuthModal({ onClose, onSuccess, defaultTab = 'login' }) 
             <button
               type="submit"
               disabled={loading || otpCode.length < 6}
-              className="w-full bg-blue-500 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium py-3 rounded-xl transition-colors"
+              className="w-full bg-accent hover:bg-accent-dim disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium py-3 rounded-xl transition-colors"
             >
               {loading ? 'Verifying...' : 'Verify & Sign In'}
             </button>
@@ -224,7 +224,7 @@ export default function AuthModal({ onClose, onSuccess, defaultTab = 'login' }) 
                 type="button"
                 onClick={handleResendOtp}
                 disabled={resending}
-                className="text-[#4a6070] hover:text-blue-400 transition-colors disabled:opacity-50"
+                className="text-[#4a6070] hover:text-accent-bright transition-colors disabled:opacity-50"
               >
                 {resending ? 'Sending...' : "Didn't receive it? Resend code"}
               </button>
@@ -244,7 +244,7 @@ export default function AuthModal({ onClose, onSuccess, defaultTab = 'login' }) 
                 placeholder="you@example.com"
                 required
                 autoFocus
-                className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-3 text-sm text-[#e8edf5] placeholder-[#3a4f63] outline-none focus:border-blue-500/50 transition-colors font-mono"
+                className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-3 text-sm text-[#e8edf5] placeholder-[#3a4f63] outline-none focus:border-accent/50 transition-colors font-mono"
               />
             </div>
             <div>
@@ -255,7 +255,7 @@ export default function AuthModal({ onClose, onSuccess, defaultTab = 'login' }) 
                 onChange={e => setPassword(e.target.value)}
                 placeholder="••••••••"
                 required
-                className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-3 text-sm text-[#e8edf5] placeholder-[#3a4f63] outline-none focus:border-blue-500/50 transition-colors font-mono"
+                className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-3 text-sm text-[#e8edf5] placeholder-[#3a4f63] outline-none focus:border-accent/50 transition-colors font-mono"
               />
             </div>
 
@@ -268,7 +268,7 @@ export default function AuthModal({ onClose, onSuccess, defaultTab = 'login' }) 
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-blue-500 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium py-3 rounded-xl transition-colors"
+              className="w-full bg-accent hover:bg-accent-dim disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium py-3 rounded-xl transition-colors"
             >
               {loading ? 'Signing in...' : 'Sign in'}
             </button>
@@ -277,7 +277,7 @@ export default function AuthModal({ onClose, onSuccess, defaultTab = 'login' }) 
               <button
                 type="button"
                 onClick={() => switchTab('signup')}
-                className="text-blue-400 hover:text-blue-300 transition-colors"
+                className="text-accent-bright hover:text-accent-bright transition-colors"
               >
                 No account? Sign up free →
               </button>
@@ -298,7 +298,7 @@ export default function AuthModal({ onClose, onSuccess, defaultTab = 'login' }) 
                 required
                 minLength={3}
                 autoFocus
-                className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-3 text-sm text-[#e8edf5] placeholder-[#3a4f63] outline-none focus:border-blue-500/50 transition-colors font-mono"
+                className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-3 text-sm text-[#e8edf5] placeholder-[#3a4f63] outline-none focus:border-accent/50 transition-colors font-mono"
               />
             </div>
             <div>
@@ -309,7 +309,7 @@ export default function AuthModal({ onClose, onSuccess, defaultTab = 'login' }) 
                 onChange={e => setEmail(e.target.value)}
                 placeholder="you@example.com"
                 required
-                className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-3 text-sm text-[#e8edf5] placeholder-[#3a4f63] outline-none focus:border-blue-500/50 transition-colors font-mono"
+                className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-3 text-sm text-[#e8edf5] placeholder-[#3a4f63] outline-none focus:border-accent/50 transition-colors font-mono"
               />
             </div>
             <div>
@@ -321,7 +321,7 @@ export default function AuthModal({ onClose, onSuccess, defaultTab = 'login' }) 
                 placeholder="min. 8 characters"
                 required
                 minLength={8}
-                className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-3 text-sm text-[#e8edf5] placeholder-[#3a4f63] outline-none focus:border-blue-500/50 transition-colors font-mono"
+                className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-3 text-sm text-[#e8edf5] placeholder-[#3a4f63] outline-none focus:border-accent/50 transition-colors font-mono"
               />
             </div>
 
@@ -334,7 +334,7 @@ export default function AuthModal({ onClose, onSuccess, defaultTab = 'login' }) 
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-blue-500 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium py-3 rounded-xl transition-colors"
+              className="w-full bg-accent hover:bg-accent-dim disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium py-3 rounded-xl transition-colors"
             >
               {loading ? 'Creating account...' : 'Create account'}
             </button>
@@ -343,7 +343,7 @@ export default function AuthModal({ onClose, onSuccess, defaultTab = 'login' }) 
               <button
                 type="button"
                 onClick={() => switchTab('login')}
-                className="text-blue-400 hover:text-blue-300 transition-colors"
+                className="text-accent-bright hover:text-accent-bright transition-colors"
               >
                 Already have an account? Sign in →
               </button>

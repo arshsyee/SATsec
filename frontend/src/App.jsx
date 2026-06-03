@@ -6,6 +6,7 @@ import AuditResults   from './pages/AuditResults'
 import Dashboard      from './pages/Dashboard'
 import Settings       from './pages/Settings'
 import Scanning       from './pages/Scanning'
+import Live           from './pages/Live'
 import NotFound       from './pages/NotFound'
 import Features       from './pages/Features'
 import Login          from './pages/Login'
@@ -14,15 +15,21 @@ import VerifyOtp      from './pages/VerifyOtp'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword  from './pages/ResetPassword'
 import ImportAuditsModal from './components/ImportAuditsModal'
+import SignOutModal from './components/SignOutModal'
+import ThemeSwitcher from './components/ThemeSwitcher'
 
 function GlobalModals() {
   const { showImportModal, pendingImportAudits, dismissImportModal } = useAuth()
-  if (!showImportModal || pendingImportAudits.length === 0) return null
   return (
-    <ImportAuditsModal
-      audits={pendingImportAudits}
-      onDone={dismissImportModal}
-    />
+    <>
+      <SignOutModal />
+      {showImportModal && pendingImportAudits.length > 0 && (
+        <ImportAuditsModal
+          audits={pendingImportAudits}
+          onDone={dismissImportModal}
+        />
+      )}
+    </>
   )
 }
 
@@ -33,6 +40,7 @@ function App() {
         <Routes>
           <Route path="/"                element={<Landing />} />
           <Route path="/scanning"        element={<Scanning />} />
+          <Route path="/live"            element={<Live />} />
           <Route path="/results"         element={<AuditResults />} />
           <Route path="/dashboard"       element={<Dashboard />} />
           <Route path="/settings"        element={<Settings />} />
@@ -45,6 +53,7 @@ function App() {
           <Route path="*"                element={<NotFound />} />
         </Routes>
         <GlobalModals />
+        <ThemeSwitcher />
       </BrowserRouter>
     </AuthProvider>
   )

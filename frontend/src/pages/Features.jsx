@@ -1,55 +1,25 @@
 import { useNavigate } from 'react-router-dom'
+import Backdrop from '../components/Backdrop'
+import Nav from '../components/Nav'
 
 export default function Features() {
   const navigate = useNavigate()
 
   return (
-    <div className="min-h-screen bg-[#080c14] text-[#e8edf5] font-sans overflow-x-hidden">
+    <div className="relative min-h-screen bg-void text-ink font-sans overflow-x-hidden">
 
-      {/* Grid background */}
-      <div className="fixed inset-0 z-0 pointer-events-none"
-        style={{
-          backgroundImage: 'linear-gradient(rgba(99,179,237,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(99,179,237,0.04) 1px, transparent 1px)',
-          backgroundSize: '48px 48px'
-        }}
-      />
-
-      {/* Nav */}
-      <nav className="relative z-10 flex items-center justify-between px-12 py-5 border-b border-white/5">
-        <div className="font-mono text-xl font-bold cursor-pointer" onClick={() => navigate('/')}>
-          SAT<span className="text-blue-500">sec</span>
-        </div>
-        <div className="hidden md:flex gap-8">
-          <span onClick={() => navigate('/features')} className="text-sm text-blue-400 cursor-pointer">Features</span>
-          <span onClick={() => navigate('/dashboard')} className="text-sm text-[#8899aa] hover:text-[#e8edf5] transition-colors cursor-pointer">Dashboard</span>
-          <span className="text-sm text-[#3a4f63] cursor-default flex items-center gap-1.5" title="Coming soon">
-            Pricing
-            <span className="text-[9px] font-mono uppercase tracking-wider bg-white/[0.05] border border-white/10 text-[#5a7080] px-1.5 py-0.5 rounded">soon</span>
-          </span>
-          <span className="text-sm text-[#3a4f63] cursor-default flex items-center gap-1.5" title="Coming soon">
-            Docs
-            <span className="text-[9px] font-mono uppercase tracking-wider bg-white/[0.05] border border-white/10 text-[#5a7080] px-1.5 py-0.5 rounded">soon</span>
-          </span>
-        </div>
-        <button onClick={() => navigate('/')} className="bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium px-5 py-2 rounded-lg transition-colors">
-          Run Audit
-        </button>
-      </nav>
+      <Backdrop />
+      <Nav active="features" />
 
       <div className="relative z-10 max-w-4xl mx-auto px-6 py-20">
 
         {/* Header */}
         <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 bg-blue-500/10 border border-blue-500/30 rounded-full px-4 py-1.5 text-xs text-blue-300 font-mono mb-6">
-            <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
-            Everything you need to monitor your site
-          </div>
-          <h1 className="text-4xl md:text-5xl font-semibold tracking-tighter text-[#f0f4fa] mb-4">
-            Built for agencies.<br />
-            <span className="text-blue-500">Loved by developers.</span>
+          <h1 className="font-display text-4xl md:text-5xl font-bold tracking-tight text-ink-bright mb-4">
+            Features
           </h1>
-          <p className="text-lg text-[#7a8fa8] font-light max-w-xl mx-auto">
-            SATsec automates everything your team does manually — and does it better, faster, and 24/7.
+          <p className="text-lg text-ink-dim max-w-xl mx-auto">
+            Everything SATsec monitors, on every audit.
           </p>
         </div>
 
@@ -57,83 +27,99 @@ export default function Features() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           {[
             {
-              icon: '⚡',
+              num: '01',
               title: 'Instant Audits',
-              desc: 'Paste any URL and get a full 4-dimension report in seconds. Performance, SEO, Accessibility and Security — all in one scan.',
+              desc: 'Paste a URL. Get Performance, SEO, Accessibility, and Security in one scan.',
               tags: ['Lighthouse', 'axe-core', 'BeautifulSoup'],
+              img: '/features/01-instant-audits.jpg',
             },
             {
-              icon: '🕐',
+              num: '02',
               title: 'Scheduled Monitoring',
-              desc: 'Set it and forget it. Choose every 6 hours, daily, or weekly. SATsec runs automatically on your schedule without anyone touching it.',
+              desc: 'Every 6 hours, daily, or weekly. Runs on your schedule, automatically.',
               tags: ['Every 6hrs', 'Daily', 'Weekly'],
+              img: '/features/02-scheduled-monitoring.png',
             },
             {
-              icon: '🔔',
+              num: '03',
               title: 'Smart Alerts',
-              desc: 'Get emailed the moment a score drops below your threshold — with a plain-English explanation of exactly what changed and why.',
+              desc: 'Emailed the moment a score drops below your threshold, with an explanation of what changed.',
               tags: ['Email alerts', 'Custom threshold', 'Instant'],
+              img: '/features/03-smart-alerts.jpg',
             },
             {
-              icon: '📈',
+              num: '04',
               title: 'Trend Dashboard',
-              desc: 'Every audit result is stored with a timestamp. See score trends over time and pinpoint exactly when a deploy broke your site.',
+              desc: 'Score history over time. Pinpoint exactly when a deploy broke your site.',
               tags: ['Score history', 'Deploy detection', 'Charts'],
+              img: '/features/04-trend-dashboard.jpg',
             },
             {
-              icon: '⚖️',
+              num: '05',
               title: 'ADA Compliance',
-              desc: 'WCAG AA checks via axe-core — the same standard used in legal proceedings. Know your risk before the lawyer calls.',
+              desc: 'WCAG AA checks via axe-core. The same standard used in legal proceedings.',
               tags: ['WCAG AA', 'axe-core', 'Legal standard'],
+              img: '/features/05-ada-compliance.jpg',
             },
             {
-              icon: '🤖',
+              num: '06',
               title: 'AI Summaries',
-              desc: 'Every report ends with a plain-English paragraph generated by Claude. Written for clients and executives, not developers.',
+              desc: 'Every report ends with a plain-English summary generated by Claude.',
               tags: ['Claude AI', 'Plain English', 'Client ready'],
+              img: '/features/06-ai-summaries.jpg',
             },
-          ].map(({ icon, title, desc, tags }) => (
-            <div key={title} className="bg-white/[0.025] border border-white/[0.06] rounded-2xl p-6 hover:border-blue-500/20 transition-colors">
-              <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-xl mb-4">{icon}</div>
-              <h3 className="text-base font-medium text-[#c8d8e8] mb-2">{title}</h3>
-              <p className="text-sm text-[#5a7080] leading-relaxed mb-4">{desc}</p>
-              <div className="flex gap-2 flex-wrap">
-                {tags.map(tag => (
-                  <span key={tag} className="text-xs bg-white/[0.04] border border-white/[0.08] text-[#6a8099] px-3 py-1 rounded-full font-mono">
-                    {tag}
-                  </span>
-                ))}
+          ].map(({ num, title, desc, tags, img }) => (
+            <div key={title} className="relative overflow-hidden panel hover:border-accent/20 transition-colors">
+              <div
+                className="h-32 w-full"
+                style={{
+                  backgroundImage: `linear-gradient(to bottom, rgba(5,8,13,0.3), rgba(5,8,13,0.9)), url(${img})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                }}
+              />
+              <div className="p-6 -mt-6 relative">
+                <div className="font-mono text-xs text-accent mb-3">{num}</div>
+                <h3 className="font-display text-base font-bold text-ink mb-2">{title}</h3>
+                <p className="text-sm text-ink-dim leading-relaxed mb-4">{desc}</p>
+                <div className="flex gap-2 flex-wrap">
+                  {tags.map(tag => (
+                    <span key={tag} className="text-xs bg-white/[0.04] border border-white/[0.08] text-ink-dim px-3 py-1 rounded-full font-mono">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
               </div>
             </div>
           ))}
         </div>
 
         {/* Coming soon */}
-        <div className="bg-white/[0.025] border border-white/[0.06] rounded-2xl p-6 mb-10">
-          <p className="text-xs font-mono text-[#8899aa] uppercase tracking-widest mb-4">Coming Soon</p>
+        <div className="panel p-6 mb-10">
+          <p className="eyebrow mb-4">Coming Soon</p>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             {[
-              { icon: '🔍', title: 'Multi-page Crawling' },
-              { icon: '🏆', title: 'Competitor Benchmarking' },
-              { icon: '📄', title: 'ADA PDF Reports' },
-              { icon: '💬', title: 'Slack Integration' },
-              { icon: '🔀', title: 'Deploy Diff Detection' },
-              { icon: '🌐', title: 'Chrome Extension' },
-            ].map(({ icon, title }) => (
+              'Multi-page Crawling',
+              'Competitor Benchmarking',
+              'ADA PDF Reports',
+              'Slack Integration',
+              'Deploy Diff Detection',
+              'Chrome Extension',
+            ].map(title => (
               <div key={title} className="flex items-center gap-3 bg-white/[0.02] border border-white/[0.04] rounded-xl px-4 py-3">
-                <span className="text-base">{icon}</span>
-                <span className="text-sm text-[#4a6070]">{title}</span>
+                <span className="font-mono text-xs text-accent/60">+</span>
+                <span className="font-mono text-sm text-ink-faint">{title}</span>
               </div>
             ))}
           </div>
         </div>
 
         {/* CTA */}
-        <div className="bg-blue-500/[0.06] border border-blue-500/20 rounded-2xl p-8 text-center">
-          <h3 className="text-xl font-medium text-[#e8edf5] mb-2">Ready to put your site under surveillance?</h3>
-          <p className="text-sm text-[#4a6070] mb-6">No signup required. Paste a URL and get results in seconds.</p>
-          <button onClick={() => navigate('/')} className="bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium px-8 py-3 rounded-lg transition-colors">
-            Run Your First Audit →
+        <div className="rounded-2xl border border-accent/20 bg-accent/[0.06] p-8 text-center">
+          <h3 className="font-display text-xl font-bold text-ink-bright mb-2">Run your first audit.</h3>
+          <p className="text-sm text-ink-faint mb-6">No signup. Results in seconds.</p>
+          <button onClick={() => navigate('/')} className="btn-accent text-sm px-8 py-3">
+            Run Audit →
           </button>
         </div>
       </div>
