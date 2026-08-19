@@ -228,7 +228,6 @@ export default function Dashboard() {
   }, [selectedUrl, isLoggedIn])
 
   const latest  = history[history.length - 1]
-  const prev    = history[history.length - 2]
   const visibleLines = activeLine === 'all' ? SCORE_DEFS.map(s => s.key) : [activeLine]
 
   // Full audit records for the selected site (newest first) — carry overall + timestamp.

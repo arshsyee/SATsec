@@ -1,5 +1,4 @@
 import { useNavigate, useLocation } from 'react-router-dom'
-import { useAuth } from '../contexts/AuthContext'
 import Backdrop from '../components/Backdrop'
 import SiteChip from '../components/SiteChip'
 
@@ -25,7 +24,6 @@ const CATEGORY_LABELS = {
 export default function AuditResults() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { isLoggedIn } = useAuth()
   const { result, url, duration } = location.state || {}
 
   // Guard — if landed here directly with no data, send back home
@@ -34,7 +32,7 @@ export default function AuditResults() {
     return null
   }
 
-  const { scores, issues, ai_summary } = result
+  const { scores, issues } = result
   const displayUrl = url || result.url
 
   const goToSchedule = () => {
