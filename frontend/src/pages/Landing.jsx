@@ -7,7 +7,7 @@ import LiveMonitor, { useDriftingScores } from '../components/LiveMonitor'
 
 function isValidDomain(input) {
   const cleaned = input.trim().replace(/^https?:\/\//i, '').split('/')[0]
-  return /^[a-zA-Z0-9][a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,}$/.test(cleaned)
+  return /^[a-zA-Z0-9][a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(cleaned)
 }
 
 /* ── Error toast ──────────────────────────────────────────────── */

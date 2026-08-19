@@ -1,298 +1,138 @@
-# SATsec
-
-**SATsec** is an automated website monitoring platform built during **HackYSU 2026**.
-
-The system continuously audits websites across four critical dimensions:
-
-- Performance
-- SEO
-- Accessibility
-- Security
-
-Instead of running manual audits occasionally, Vigil was designed to monitor website health over time, track score changes, and notify users when issues appear.
-
-⚠️ This repository is preserved as a **hackathon project showcase**.  
-The live deployment and infrastructure used during development are no longer actively maintained.
-
----
-
-# Project Overview
-
-Modern websites frequently degrade over time due to updates, configuration changes, or overlooked issues. Many teams only discover problems after they impact users, search rankings, or accessibility compliance.
-
-Vigil was created to provide a **continuous monitoring solution** that automatically audits websites and tracks their health across multiple categories.
-
-The goal was to move teams from **reactive debugging** to **proactive monitoring**.
-
----
-
-# Key Features
-
-## Automated Website Audits
-
-Vigil allows users to run a full audit on any website URL.
-
-Each audit evaluates the site across four categories:
-
-- Performance
-- SEO
-- Accessibility
-- Security
-
-Each category produces an individual score along with an overall site health score.
-
----
-
-## Historical Monitoring
-
-Instead of a single audit snapshot, Vigil stores previous results to allow users to observe how website health changes over time.
-
-Features included:
-
-- Historical score tracking
-- Trend visualization
-- Detection of regressions after updates
-
----
-
-## Scheduled Monitoring
-
-Vigil supports automated recurring audits.
-
-Users could configure monitoring intervals such as:
-
-- Every 6 hours
-- Every 12 hours
-- Every 24 hours
-
-This allows continuous monitoring rather than one-time scans.
-
----
-
-## Alert System
-
-Users could configure alert thresholds for monitored websites.
-
-If the site score dropped below a defined threshold, Vigil would send an email notification so teams could quickly investigate the issue.
-
----
-
-## Guest Mode
-
-Vigil supported guest audits without requiring account creation.
-
-Guest audit results were:
-
-- Stored locally in the browser
-- Importable into a user account after signup
-
----
-
-## Authentication System
-
-The platform included a secure authentication system with:
-
-- User signup
-- Email OTP verification
-- JWT-based login sessions
-- Password reset via email token
-
----
-
-## AI Audit Summaries
-
-The system also included infrastructure for generating AI-powered summaries explaining:
-
-- Detected issues
-- Why they matter
-- Suggested fixes
-
----
-
-# Technology Stack
-
-## Frontend
-
-- React
-- Vite
-- React Router
-- TailwindCSS
-- Recharts
-- Vitest
-- ESLint
-
----
-
-## Backend
-
-- Python 3.11
-- FastAPI
-- Uvicorn
-- SQLAlchemy
-- SQLite (development)
-- PostgreSQL (production design)
-- JWT Authentication
-- APScheduler
-- AWS SES (email delivery)
-- BeautifulSoup
-- Requests
-
----
-
-# How Vigil Audits Websites
-
-Vigil analyzes websites across four primary categories.
-
----
-
-## Performance
-
-Performance checks included:
-
-- Page load time
-- HTML payload size
-- Compression usage
-- Render blocking scripts
-- Missing image dimensions
-- Inline styles
-- Missing viewport meta tag
-
-These checks help ensure websites load efficiently and follow performance best practices.
-
----
-
-## SEO
-
-SEO checks included:
-
-- Title tag presence
-- Meta description
-- H1 usage
-- Missing image alt text
-- Canonical tags
-- Open Graph tags
-- robots.txt
-- sitemap.xml
-- Broken internal links
-- Heading hierarchy
-- Structured data
-
-These checks help websites follow search engine optimization best practices.
-
----
-
-## Accessibility
-
-Accessibility checks were based on **WCAG accessibility guidelines**, including:
-
-- Missing alt text
-- Form labels
-- ARIA usage
-- Color contrast
-- Keyboard navigation
-- Landmarks
-- Focus indicators
-- Readability
-
-These checks help ensure websites remain usable for people with disabilities.
-
----
-
-## Security
-
-Security checks included:
-
-- HTTPS enforcement
-- Security headers
-- Mixed content
-- Missing HSTS configuration
-- SSL/TLS configuration
-- Vulnerable JavaScript libraries
-
-These checks help detect common security misconfigurations.
-
----
-
-# Scoring System
-
-Vigil calculates an overall website health score using a weighted average.
-
-| Category | Weight |
-|--------|--------|
-| Performance | 25% |
-| SEO | 25% |
-| Accessibility | 30% |
-| Security | 20% |
-
-The weighted score helps provide a quick overview of a site's health.
-
----
-
-# Project Structure
-
-```
-vigil/
-  backend/
-    main.py
-    audit.py
-    database.py
-    auth.py
-    alerts.py
-    scheduler.py
-
-  frontend/
-    src/
-      api.js
-      App.jsx
-      contexts/
-      pages/
-      components/
-      utils/
-      __tests__/
+# Vigil
+
+Vigil is a full-stack website monitoring platform built during HackYSU 2026. It audits websites for performance, accessibility, SEO, and security issues, stores results over time, and helps users identify regressions after a site changes.
+
+![Vigil dashboard showing scheduled monitoring](frontend/public/features/02-scheduled-monitoring.png)
+
+## Highlights
+
+- Runs on-demand audits across performance, accessibility, SEO, and security
+- Tracks historical scores and visualizes trends in a React dashboard
+- Supports recurring audits and configurable score-drop alerts
+- Provides guest audits that can be imported after registration
+- Includes account registration, email verification, JWT sessions, and password reset
+- Generates optional AI summaries when an Anthropic API key is configured
+- Sends optional email and webhook notifications
+
+![Vigil audit feature overview](frontend/public/features/01-instant-audits.jpg)
+
+## Architecture
+
+```text
+React + Vite frontend
+        |
+        | REST API
+        v
+FastAPI application
+  |-- audit engine
+  |-- authentication
+  |-- scheduler and alerts
+  `-- SQLAlchemy persistence
+        |
+        | SQLite locally / PostgreSQL-ready configuration
+        v
+Audit history and scheduled checks
 ```
 
----
+## Technology
 
-# Development Notes
+| Layer | Tools |
+| --- | --- |
+| Frontend | React, Vite, React Router, Tailwind CSS, Recharts |
+| Backend | Python, FastAPI, SQLAlchemy, APScheduler |
+| Data | SQLite for local development; PostgreSQL configuration supported |
+| Integrations | AWS SES, Anthropic, Sentry, webhooks |
+| Testing | Vitest, Testing Library |
 
-The project was developed as part of a **36-hour hackathon build** and was designed with scalability in mind.
+## Project status
 
-The architecture supports:
+Vigil is maintained as a hackathon project showcase. The original deployment is no longer running, but the repository contains the working application developed for the event.
 
-- Scheduled audit workers
-- Historical audit storage
-- Email notifications
-- Future cloud deployment
+### Implemented
 
-During development, the system ran locally with working authentication, auditing, scheduling, and email notifications.
+- On-demand multi-category website audits
+- Historical audit storage and score visualization
+- Scheduled audits and threshold alerts
+- Guest sessions and account import
+- Registration, email verification, login, and password reset
+- Optional AI summaries, email notifications, webhooks, and Sentry integration
+- Responsive React interface with light and dark themes
 
----
+### Planned or production-hardening work
 
-# Built At
+- Production deployment and infrastructure validation
+- Expanded backend test coverage
+- Distributed task workers for higher audit volume
+- Billing, teams, report export, and public API features described under `docs/feature-plans/`
 
-**HackYSU 2026**
+Planned documents describe future directions and are not presented as shipped functionality.
 
-This project was created during a 36-hour hackathon to explore automated monitoring tools for modern websites.
+## Run locally
 
----
+### Prerequisites
 
-# Project Status
+- Python 3.11+
+- Node.js 20+
 
-This repository is maintained as a **past project showcase**.
+### Backend
 
-The original development environment and deployment used during the hackathon are no longer actively maintained.
+```powershell
+cd backend
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+Copy-Item .env.example .env
+python -m uvicorn main:app --reload
+```
 
----
+The API runs at `http://localhost:8000`.
 
-# Summary
+For local evaluation, the placeholder values in `.env.example` are sufficient for core auditing. Email delivery, AI summaries, and error monitoring remain disabled until their optional credentials are configured.
 
-Vigil was designed as a **continuous watchdog for websites**.
+### Frontend
 
-Instead of manually checking sites only when problems appear, teams could:
+In a second terminal:
 
-- Automatically audit websites
-- Track health over time
-- Detect regressions early
-- Receive alerts when issues appear
+```powershell
+cd frontend
+npm ci
+Copy-Item .env.example .env
+npm run dev
+```
 
-The project demonstrates a full-stack monitoring platform built with modern web technologies.
+Open `http://localhost:5173`.
+
+## Checks
+
+```powershell
+cd frontend
+npm ci
+npm test
+npm run lint
+npm run build
+```
+
+## Repository map
+
+```text
+backend/                 FastAPI application, audit engine, auth, and scheduling
+frontend/src/            React application
+frontend/src/__tests__/  Frontend API tests
+docs/feature-plans/      Clearly labeled future feature designs
+docs/implementation/     Deployment and scaling notes
+```
+
+## Security notes
+
+- Secrets belong in local `.env` files, which are ignored by Git.
+- The checked-in `.env.example` files contain placeholders only.
+- Do not expose a development instance to the public internet without reviewing the production-hardening notes.
+- `docs/SECURITY_WEAKNESSES.md` records known hardening work transparently.
+
+## Background
+
+Vigil was created during a 36-hour HackYSU build to explore a shift from one-time website audits to continuous monitoring. The project demonstrates end-to-end product development across a React frontend, Python API, persistence, authentication, scheduled work, and external integrations.
+
+## License
+
+See [LICENSE.md](LICENSE.md).
