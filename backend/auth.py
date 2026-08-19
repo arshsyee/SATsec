@@ -4,7 +4,7 @@ import datetime
 import secrets
 from passlib.context import CryptContext
 
-SECRET_KEY = os.getenv("JWT_SECRET", "vigil-dev-secret-change-in-production")
+SECRET_KEY = os.getenv("JWT_SECRET", "satsec-dev-secret-change-in-production")
 ALGORITHM  = "HS256"
 TOKEN_EXPIRE_DAYS = 7
 

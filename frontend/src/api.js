@@ -3,9 +3,9 @@ const BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
 // Reads auth state from localStorage to build the right identity header.
 // If a JWT token exists → Authorization: Bearer. Otherwise → X-Session-ID.
 function authHeaders() {
-  const token = localStorage.getItem('vigil_token')
+  const token = localStorage.getItem('satsec_token')
   if (token) return { Authorization: `Bearer ${token}` }
-  const sessionId = localStorage.getItem('vigil_session_id')
+  const sessionId = localStorage.getItem('satsec_session_id')
   if (sessionId) return { 'X-Session-ID': sessionId }
   return {}
 }

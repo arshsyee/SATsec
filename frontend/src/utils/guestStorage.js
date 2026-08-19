@@ -1,4 +1,4 @@
-const KEY = 'vigil_guest_audits'
+const KEY = 'satsec_guest_audits'
 
 export function getGuestAudits() {
   try {

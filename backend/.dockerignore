@@ -2,5 +2,5 @@ __pycache__/
 *.pyc
 *.pyo
 .env
-vigil.db
+satsec.db
 .dockerignore

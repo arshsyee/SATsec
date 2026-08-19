@@ -8,7 +8,7 @@ const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
   const [user,              setUser]              = useState(null)
-  const [token,             setToken]             = useState(() => localStorage.getItem('vigil_token'))
+  const [token,             setToken]             = useState(() => localStorage.getItem('satsec_token'))
   const [ready,             setReady]             = useState(false)
   const [showImportModal,   setShowImportModal]   = useState(false)
   const [pendingImportAudits, setPendingImportAudits] = useState([])
@@ -29,19 +29,19 @@ export function AuthProvider({ children }) {
         if (data) {
           setUser(data)
         } else {
-          localStorage.removeItem('vigil_token')
+          localStorage.removeItem('satsec_token')
           setToken(null)
         }
       })
       .catch(() => {
-        localStorage.removeItem('vigil_token')
+        localStorage.removeItem('satsec_token')
         setToken(null)
       })
       .finally(() => setReady(true))
   }, [])
 
   function login(tokenValue, userData) {
-    localStorage.setItem('vigil_token', tokenValue)
+    localStorage.setItem('satsec_token', tokenValue)
     setToken(tokenValue)
     setUser(userData)
 
@@ -54,7 +54,7 @@ export function AuthProvider({ children }) {
   }
 
   function logout() {
-    localStorage.removeItem('vigil_token')
+    localStorage.removeItem('satsec_token')
     setToken(null)
     setUser(null)
   }

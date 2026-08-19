@@ -11,7 +11,7 @@ import Backdrop from '../components/Backdrop'
 import SiteChip from '../components/SiteChip'
 import WelcomeModal from '../components/WelcomeModal'
 
-const ONBOARDED_KEY = 'vigil_onboarded'
+const ONBOARDED_KEY = 'satsec_onboarded'
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 

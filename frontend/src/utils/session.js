@@ -1,8 +1,8 @@
 export function getOrCreateSessionId() {
-  let id = localStorage.getItem('vigil_session_id')
+  let id = localStorage.getItem('satsec_session_id')
   if (!id) {
     id = crypto.randomUUID()
-    localStorage.setItem('vigil_session_id', id)
+    localStorage.setItem('satsec_session_id', id)
   }
   return id
 }

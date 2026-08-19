@@ -82,7 +82,7 @@ htmlcov/
 *.sqlite3
 
 # Specific project DB
-vigil.db
+satsec.db
 
 ############################
 # LOG FILES
