@@ -1,8 +1,8 @@
-# Vigil
+# SATsec
 
-Vigil is a full-stack website monitoring platform built during HackYSU 2026. It audits websites for performance, accessibility, SEO, and security issues, stores results over time, and helps users identify regressions after a site changes.
+SATsec is a full-stack website monitoring platform built during HackYSU 2026. It audits websites for performance, accessibility, SEO, and security issues, stores results over time, and helps users identify regressions after a site changes.
 
-![Vigil dashboard showing scheduled monitoring](frontend/public/features/02-scheduled-monitoring.png)
+![SATsec dashboard showing scheduled monitoring](frontend/public/features/02-scheduled-monitoring.png)
 
 ## Highlights
 
@@ -14,7 +14,7 @@ Vigil is a full-stack website monitoring platform built during HackYSU 2026. It 
 - Generates optional AI summaries when an Anthropic API key is configured
 - Sends optional email and webhook notifications
 
-![Vigil audit feature overview](frontend/public/features/01-instant-audits.jpg)
+![SATsec audit feature overview](frontend/public/features/01-instant-audits.jpg)
 
 ## Architecture
 
@@ -46,7 +46,7 @@ Audit history and scheduled checks
 
 ## Project status
 
-Vigil is maintained as a hackathon project showcase. The original deployment is no longer running, but the repository contains the working application developed for the event.
+SATsec is maintained as a hackathon project showcase. The original deployment is no longer running, but the repository contains the working application developed for the event.
 
 ### Implemented
 
@@ -131,7 +131,7 @@ docs/implementation/     Deployment and scaling notes
 
 ## Background
 
-Vigil was created during a 36-hour HackYSU build to explore a shift from one-time website audits to continuous monitoring. The project demonstrates end-to-end product development across a React frontend, Python API, persistence, authentication, scheduled work, and external integrations.
+SATsec was created during a 36-hour HackYSU build to explore a shift from one-time website audits to continuous monitoring. The project demonstrates end-to-end product development across a React frontend, Python API, persistence, authentication, scheduled work, and external integrations.
 
 ## License
 
