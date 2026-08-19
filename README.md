@@ -1,6 +1,8 @@
 # SATsec
 
-SATsec is a full-stack website monitoring platform built during HackYSU 2026. It audits websites for performance, accessibility, SEO, and security issues, stores results over time, and helps users identify regressions after a site changes.
+SATsec is a full-stack website monitoring platform built during HackYSU 2026, where our team won **2nd Place** and **Best Use of AWS**. It audits websites for performance, accessibility, SEO, and security issues, stores results over time, and helps users identify regressions after a site changes.
+
+AWS powered the hackathon deployment and infrastructure, supporting SATsec's shift from manual website checks to continuous monitoring and real-time score-drop alerts.
 
 ![SATsec dashboard showing scheduled monitoring](frontend/public/features/02-scheduled-monitoring.png)
 
