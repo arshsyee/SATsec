@@ -7,7 +7,7 @@
 ---
 
 ## Current State
-`backend/alerts.py` uses `boto3` to call AWS SES. It silently skips if `VIGIL_FROM_EMAIL`
+`backend/alerts.py` uses `boto3` to call AWS SES. It silently skips if `SATSEC_FROM_EMAIL`
 is not set. The backend crashes on startup if `boto3` is not installed (missing from requirements.txt).
 
 ## Fix #1 — Add boto3 to requirements.txt
@@ -32,7 +32,7 @@ AWS SES starts in sandbox mode (can only email verified addresses).
 
 ### 3. Set environment variables
 ```
-VIGIL_FROM_EMAIL=noreply@yourdomain.com
+SATSEC_FROM_EMAIL=noreply@yourdomain.com
 AWS_ACCESS_KEY_ID=...
 AWS_SECRET_ACCESS_KEY=...
 AWS_DEFAULT_REGION=us-east-2

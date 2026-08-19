@@ -57,7 +57,7 @@ def send_webhook(webhook_url: str, payload: dict):
     try:
         requests.post(webhook_url, json=payload, timeout=10)
     except Exception as e:
-        print(f"[Vigil] Webhook delivery failed: {e}")
+        print(f"[SATsec] Webhook delivery failed: {e}")
 ```
 
 ### `ScheduleRequest` model — add optional field

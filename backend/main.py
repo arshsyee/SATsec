@@ -115,7 +115,7 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
     before CORS headers are applied, causing browsers to report a CORS error
     instead of the actual 500.
     """
-    print(f"[Vigil] Unhandled error on {request.method} {request.url.path}: "
+    print(f"[SATsec] Unhandled error on {request.method} {request.url.path}: "
           f"{type(exc).__name__}: {exc}")
     return JSONResponse(
         status_code=500,
@@ -231,7 +231,7 @@ def generate_ai_summary(url: str, scores: dict, issues: list) -> str:
         )
         return message.content[0].text
     except Exception as e:
-        print(f"[Vigil] AI summary generation failed: {e}")
+        print(f"[SATsec] AI summary generation failed: {e}")
         return "AI summary unavailable."
 
 
@@ -468,7 +468,7 @@ def reset_password(body: ResetPasswordRequest):
 
 @app.get("/")
 def root():
-    return {"message": "Vigil is running", "version": "1.0.0"}
+    return {"message": "SATsec is running", "version": "1.0.0"}
 
 
 # Audits are expensive (fetch + parse + SSL check). Guests: 5/min per IP.
@@ -565,7 +565,7 @@ def trigger_audit_stream(request: Request, body: AuditRequest, identity: dict = 
                 else:
                     yield _sse(event)
         except Exception as e:
-            print(f"[Vigil] Stream audit error on {url}: {type(e).__name__}: {e}")
+            print(f"[SATsec] Stream audit error on {url}: {type(e).__name__}: {e}")
             yield _sse({"type": "error", "message": "Internal server error during audit"})
 
     return StreamingResponse(
@@ -593,7 +593,7 @@ async def screenshot_endpoint(request: Request, url: str):
     try:
         png = await screenshot_utils.capture(url)
     except Exception as e:
-        print(f"[Vigil] Screenshot failed for {url}: {type(e).__name__}: {e}")
+        print(f"[SATsec] Screenshot failed for {url}: {type(e).__name__}: {e}")
         raise HTTPException(status_code=502, detail="Could not capture screenshot")
 
     return Response(
@@ -818,11 +818,11 @@ def get_scheduler_jobs():
 # ─────────────────────────────────────────
 
 def run_scheduled_audit(url: str):
-    print(f"[Vigil] Running scheduled audit for {url}")
+    print(f"[SATsec] Running scheduled audit for {url}")
 
     result = run_audit(url)
     if result.get("error"):
-        print(f"[Vigil] Scheduled audit failed for {url}: {result['error']}")
+        print(f"[SATsec] Scheduled audit failed for {url}: {result['error']}")
         return
 
     result["ai_summary"] = generate_ai_summary(url, result["scores"], result["issues_flat"])
@@ -859,7 +859,7 @@ def run_scheduled_audit(url: str):
                     issues=result["issues_flat"]
                 )
             if schedule.webhook_url:
-                app_base = os.getenv("VIGIL_APP_URL", "").rstrip("/")
+                app_base = os.getenv("SATSEC_APP_URL", "").rstrip("/")
                 send_webhook(schedule.webhook_url, {
                     "event": "score_drop",
                     "url": url,
@@ -878,12 +878,12 @@ def run_scheduled_audit(url: str):
 @app.on_event("startup")
 def startup():
     # Log CORS origins so they can be verified in App Runner logs
-    print(f"[Vigil] Allowed CORS origins: {_allowed_origins}")
+    print(f"[SATsec] Allowed CORS origins: {_allowed_origins}")
 
     if os.getenv("ANTHROPIC_API_KEY"):
-        print("[Vigil] ANTHROPIC_API_KEY is set — AI summaries enabled")
+        print("[SATsec] ANTHROPIC_API_KEY is set — AI summaries enabled")
     else:
-        print("[Vigil] WARNING: ANTHROPIC_API_KEY is not set — AI summaries will be disabled")
+        print("[SATsec] WARNING: ANTHROPIC_API_KEY is not set — AI summaries will be disabled")
 
     start_scheduler()
 
@@ -896,7 +896,7 @@ def startup():
                 interval_hours=s.interval_hours,
                 run_audit_fn=run_scheduled_audit
             )
-        print(f"[Vigil] Restored {len(active_schedules)} scheduled audit(s) from database")
+        print(f"[SATsec] Restored {len(active_schedules)} scheduled audit(s) from database")
 
 
 @app.on_event("shutdown")

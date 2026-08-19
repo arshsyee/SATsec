@@ -3,14 +3,14 @@ import os
 import requests
 from botocore.exceptions import ClientError
 
-FROM_EMAIL = os.getenv("VIGIL_FROM_EMAIL", "")
+FROM_EMAIL = os.getenv("SATSEC_FROM_EMAIL", "")
 SES_REGION = "us-east-2"
 
 
 def _send(to_email: str, subject: str, body: str):
     """Send a plain-text email via AWS SES. Auth is handled by the IAM role."""
     if not FROM_EMAIL:
-        print("[Vigil] VIGIL_FROM_EMAIL not set — skipping email")
+        print("[SATsec] SATSEC_FROM_EMAIL not set — skipping email")
         return
     try:
         client = boto3.client("ses", region_name=SES_REGION)
@@ -22,16 +22,16 @@ def _send(to_email: str, subject: str, body: str):
                 "Body":    {"Text": {"Data": body,    "Charset": "UTF-8"}},
             },
         )
-        print(f"[Vigil] Email sent to {to_email} — {subject}")
+        print(f"[SATsec] Email sent to {to_email} — {subject}")
     except ClientError as e:
-        print(f"[Vigil] SES send failed: {e.response['Error']['Message']}")
+        print(f"[SATsec] SES send failed: {e.response['Error']['Message']}")
     except Exception as e:
-        print(f"[Vigil] SES send failed: {e}")
+        print(f"[SATsec] SES send failed: {e}")
 
 
 def send_alert(to_email: str, url: str, scores: dict, issues: list):
     """Sends an email alert when a score drops below the threshold."""
-    subject = f"Vigil Alert: Score drop detected on {url}"
+    subject = f"SATsec Alert: Score drop detected on {url}"
 
     score_lines = "\n".join([
         f"  • Performance:   {scores['performance']}/100",
@@ -45,7 +45,7 @@ def send_alert(to_email: str, url: str, scores: dict, issues: list):
     if len(issues) > 10:
         issue_lines += f"\n  ... and {len(issues) - 10} more issues"
 
-    body = f"""Vigil has detected issues on a monitored site.
+    body = f"""SATsec has detected issues on a monitored site.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Site: {url}
@@ -58,7 +58,7 @@ Issues Found:
 {issue_lines}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-This alert was sent automatically by Vigil.
+This alert was sent automatically by SATsec.
 Always watching. Always reporting."""
 
     _send(to_email, subject, body)
@@ -66,10 +66,10 @@ Always watching. Always reporting."""
 
 def send_reset_email(to_email: str, username: str, reset_url: str):
     """Sends a password reset link to the user."""
-    subject = "Vigil — Password Reset Request"
+    subject = "SATsec — Password Reset Request"
     body = f"""Hi {username},
 
-You requested a password reset for your Vigil account.
+You requested a password reset for your SATsec account.
 
 Click the link below to reset your password (expires in 1 hour):
 {reset_url}
@@ -77,26 +77,26 @@ Click the link below to reset your password (expires in 1 hour):
 If you didn't request this, you can safely ignore this email.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Vigil — Always watching. Always reporting."""
+SATsec — Always watching. Always reporting."""
 
     _send(to_email, subject, body)
 
 
 def send_otp_email(to_email: str, username: str, otp_code: str):
     """Sends an OTP verification code to the user's email."""
-    subject = "Vigil — Verify your email"
+    subject = "SATsec — Verify your email"
     body = f"""Hi {username},
 
-Your Vigil verification code is:
+Your SATsec verification code is:
 
     {otp_code}
 
 This code expires in 10 minutes. Enter it on the verification page to activate your account.
 
-If you didn't create a Vigil account, you can safely ignore this email.
+If you didn't create a SATsec account, you can safely ignore this email.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Vigil — Always watching. Always reporting."""
+SATsec — Always watching. Always reporting."""
 
     _send(to_email, subject, body)
 
@@ -134,7 +134,7 @@ def send_webhook(webhook_url: str, payload: dict):
     try:
         requests.post(webhook_url, json=payload, timeout=10)
     except Exception as e:
-        print(f"[Vigil] Webhook delivery failed: {e}")
+        print(f"[SATsec] Webhook delivery failed: {e}")
 
 
 def should_alert(scores: dict, threshold: float) -> bool:

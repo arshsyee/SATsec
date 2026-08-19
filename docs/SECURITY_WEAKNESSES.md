@@ -37,7 +37,7 @@ return f"{random.randint(0, 999999):06d}"
 ### 4. Hardcoded Fallback JWT Secret
 **File:** `backend/auth.py:7`  
 ```python
-SECRET_KEY = os.getenv("JWT_SECRET", "vigil-dev-secret-change-in-production")
+SECRET_KEY = os.getenv("JWT_SECRET", "satsec-dev-secret-change-in-production")
 ```
 **Risk:** If deployed without setting `JWT_SECRET`, all JWTs are signed with a publicly known key — any attacker can forge valid tokens.  
 **Fix:** Remove the fallback; raise a startup error if the env var is missing.

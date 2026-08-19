@@ -26,7 +26,7 @@ Non-goals: ads anywhere except the loading screen; ads for logged-in paying user
 Gating runs entirely client-side off the existing guest-audit history.
 
 1. Guest runs first audit → `guestStorage.js` already saves it to `localStorage`
-   (`vigil_guest_audits`). Scan count = `getGuestAudits().length`.
+   (`satsec_guest_audits`). Scan count = `getGuestAudits().length`.
 2. **First scan** (count 0 when scan starts): no ad. Clean loading screen.
 3. **Second scan onward** (count ≥ 1): `Scanning.jsx` renders an ad slot below the
    radar dial while the audit streams.

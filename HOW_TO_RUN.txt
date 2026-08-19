@@ -1,5 +1,5 @@
 ================================================================================
-  VIGIL — HOW TO RUN LOCALLY
+  SATSEC — HOW TO RUN LOCALLY
 ================================================================================
 
 REQUIREMENTS
@@ -15,7 +15,7 @@ REQUIREMENTS
 
 1. Open a terminal and navigate to the backend folder:
 
-     cd vigil/backend
+     cd satsec/backend
 
 2. Install Python dependencies:
 
@@ -29,8 +29,8 @@ REQUIREMENTS
 3. Create a .env file in the backend folder with your keys:
 
      ANTHROPIC_API_KEY=sk-ant-...        (for AI summaries)
-     VIGIL_EMAIL_ADDRESS=you@gmail.com   (for alert emails — optional)
-     VIGIL_EMAIL_PASSWORD=yourpassword   (for alert emails — optional)
+     SATSEC_EMAIL_ADDRESS=you@gmail.com   (for alert emails — optional)
+     SATSEC_EMAIL_PASSWORD=yourpassword   (for alert emails — optional)
 
    If you skip the API key, AI summaries will just say "unavailable".
    If you skip the email vars, score-drop alerts won't be sent.
@@ -49,7 +49,7 @@ REQUIREMENTS
 
 1. Open a second terminal and navigate to the frontend folder:
 
-     cd vigil/frontend
+     cd satsec/frontend
 
 2. Install Node dependencies:
 
@@ -85,12 +85,12 @@ REQUIREMENTS
 
   Backend tests (Python / pytest):
 
-     cd vigil/backend
-     py -m pytest test_vigil.py -v
+     cd satsec/backend
+     py -m pytest test_satsec.py -v
 
   Frontend tests (Vitest):
 
-     cd vigil/frontend
+     cd satsec/frontend
      npm test
 
 
@@ -109,7 +109,7 @@ REQUIREMENTS
     → Make sure the backend is running on port 8000 before starting the frontend.
 
   "recharts is not installed"
-    → Run: npm install recharts  (inside vigil/frontend)
+    → Run: npm install recharts  (inside satsec/frontend)
 
   SSL error when auditing a site (DH_KEY_TOO_SMALL)
     → The target site is using an outdated SSL configuration.

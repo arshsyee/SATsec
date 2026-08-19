@@ -1,16 +1,16 @@
 {
-  "CallerReference": "vigil-frontend-20260315012547",
+  "CallerReference": "satsec-frontend-20260315012547",
   "Origins": {
     "Quantity": 1,
     "Items": [{
-      "Id": "vigil-s3-origin",
-      "DomainName": "vigil-frontend-923503242158.s3.us-east-2.amazonaws.com",
+      "Id": "satsec-s3-origin",
+      "DomainName": "satsec-frontend-923503242158.s3.us-east-2.amazonaws.com",
       "S3OriginConfig": { "OriginAccessIdentity": "" },
       "OriginAccessControlId": "E4QOTV8NDR5DO"
     }]
   },
   "DefaultCacheBehavior": {
-    "TargetOriginId": "vigil-s3-origin",
+    "TargetOriginId": "satsec-s3-origin",
     "ViewerProtocolPolicy": "redirect-to-https",
     "CachePolicyId": "658327ea-f89d-4fab-a63d-7e88639e58f6",
     "AllowedMethods": { "Quantity": 2, "Items": ["GET", "HEAD"] }
@@ -26,5 +26,5 @@
   "Enabled": true,
   "HttpVersion": "http2",
   "PriceClass": "PriceClass_100",
-  "Comment": "Vigil frontend"
+  "Comment": "SATsec frontend"
 }

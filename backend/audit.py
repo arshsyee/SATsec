@@ -160,7 +160,7 @@ def _letter_grade(score: float) -> str:
 # MAIN AUDIT FUNCTION
 # -----------------------------------------
 def run_audit(url: str) -> dict:
-    print(f"[Vigil] Starting audit for {url}")
+    print(f"[SATsec] Starting audit for {url}")
 
     page = fetch_page(url)
     if page is None:
@@ -177,7 +177,7 @@ def run_audit(url: str) -> dict:
     security = audit_security(url, response)
 
     result = _assemble_result(url, performance, seo, accessibility, security)
-    print(f"[Vigil] Audit complete for {url} — Overall: {result['scores']['overall']} ({result['grade']})")
+    print(f"[SATsec] Audit complete for {url} — Overall: {result['scores']['overall']} ({result['grade']})")
     return result
 
 
@@ -276,7 +276,7 @@ def run_audit_staged(url: str):
       {"type": "result", "result": {...}}
       {"type": "error",  "message": str}
     """
-    print(f"[Vigil] Starting staged audit for {url}")
+    print(f"[SATsec] Starting staged audit for {url}")
     yield {"type": "init", "url": url, "stages": AUDIT_STAGES}
 
     # ── fetch ──
@@ -313,7 +313,7 @@ def run_audit_staged(url: str):
     result = _assemble_result(url, performance, seo, accessibility, security)
     yield {"type": "stage", "id": "compile", "status": "done"}
 
-    print(f"[Vigil] Staged audit complete for {url} — Overall: {result['scores']['overall']} ({result['grade']})")
+    print(f"[SATsec] Staged audit complete for {url} — Overall: {result['scores']['overall']} ({result['grade']})")
     yield {"type": "result", "result": result}
 
 
@@ -338,7 +338,7 @@ def fetch_page(url: str) -> dict | None:
             "response": response
         }
     except requests.exceptions.RequestException as e:
-        print(f"[Vigil] Fetch error: {e}")
+        print(f"[SATsec] Fetch error: {e}")
         return None
 
 
@@ -866,7 +866,7 @@ def audit_security(url: str, response) -> dict:
         except ssl.SSLError as e:
             f.add(f"SSL certificate error: {str(e)}", "serious")
         except Exception as e:
-            print(f"[Vigil] SSL check failed: {e}")
+            print(f"[SATsec] SSL check failed: {e}")
 
     # ── NEW: Cookie security flags ──────────────────────────────────────
     set_cookie = headers.get("Set-Cookie", "")

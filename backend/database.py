@@ -5,7 +5,7 @@ import datetime
 import os
 
 # Use DATABASE_URL from environment (RDS on prod, SQLite for local dev)
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./vigil.db")
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./satsec.db")
 
 # connect_args is SQLite-specific — not valid for PostgreSQL
 _connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}

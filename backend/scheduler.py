@@ -8,13 +8,13 @@ scheduler = BackgroundScheduler()
 def start_scheduler():
     if not scheduler.running:
         scheduler.start()
-        print("[Vigil] Scheduler started")
+        print("[SATsec] Scheduler started")
 
 
 def stop_scheduler():
     if scheduler.running:
         scheduler.shutdown()
-        print("[Vigil] Scheduler stopped")
+        print("[SATsec] Scheduler stopped")
 
 
 def add_scheduled_audit(audit_id: int, url: str, interval_hours: int, run_audit_fn):
@@ -33,18 +33,18 @@ def add_scheduled_audit(audit_id: int, url: str, interval_hours: int, run_audit_
         trigger=IntervalTrigger(hours=interval_hours),
         args=[url],
         id=job_id,
-        name=f"Vigil audit: {url}",
+        name=f"SATsec audit: {url}",
         next_run_time=datetime.datetime.now() + datetime.timedelta(hours=interval_hours)
     )
 
-    print(f"[Vigil] Scheduled audit #{audit_id} for {url} every {interval_hours}h")
+    print(f"[SATsec] Scheduled audit #{audit_id} for {url} every {interval_hours}h")
 
 
 def remove_scheduled_audit(audit_id: int):
     job_id = f"audit_{audit_id}"
     if scheduler.get_job(job_id):
         scheduler.remove_job(job_id)
-        print(f"[Vigil] Removed scheduled audit #{audit_id}")
+        print(f"[SATsec] Removed scheduled audit #{audit_id}")
 
 
 def list_scheduled_jobs():

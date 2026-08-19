@@ -5,7 +5,7 @@
 ```
 Users → CloudFront (E228OJOX97DHP0)
               ↓
-         S3 Bucket (vigil-frontend-923503242158)   [React build]
+         S3 Bucket (satsec-frontend-923503242158)   [React build]
               
 Users → App Runner / EC2
               ↓
@@ -25,7 +25,7 @@ Users → App Runner / EC2
 DATABASE_URL=postgresql://user:pass@rds-endpoint:5432/satsec
 JWT_SECRET=<strong-random-secret>
 ANTHROPIC_API_KEY=sk-ant-...
-VIGIL_FROM_EMAIL=noreply@yourdomain.com
+SATSEC_FROM_EMAIL=noreply@yourdomain.com
 FRONTEND_URL=https://yourdomain.com
 AWS_DEFAULT_REGION=us-east-2
 ```
@@ -37,7 +37,7 @@ AWS_DEFAULT_REGION=us-east-2
 ```bash
 # From frontend/
 npm run build
-aws s3 sync dist/ s3://vigil-frontend-923503242158 --delete
+aws s3 sync dist/ s3://satsec-frontend-923503242158 --delete
 aws cloudfront create-invalidation --distribution-id E228OJOX97DHP0 --paths "/*"
 ```
 
@@ -85,4 +85,4 @@ cd backend && uvicorn main:app --reload
 # Frontend
 cd frontend && npm run dev
 ```
-SQLite (`vigil.db`) is auto-created in backend/ on first run.
+SQLite (`satsec.db`) is auto-created in backend/ on first run.
